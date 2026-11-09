@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Syntax Check</title>
+</head>
+<body>
+    <h1>Loading service_report_admin_v2.php...</h1>
+    <script>
+        // Try to load the PHP file and check for syntax errors
+        fetch('views/service_report_admin_v2.php')
+            .then(r => r.text())
+            .then(html => {
+                // Extract the JavaScript section
+                const match = html.match(/<script[^>]*>([\s\S]*?)<\/script>/g);
+                if (match) {
+                    console.log('Found', match.length, 'script tags');
+                    // Try to parse the first main script tag
+                    try {
+                        new Function(match[match.length - 1].replace(/<script[^>]*>|<\/script>/g, ''));
+                        console.log('No syntax errors found');
+                    } catch (e) {
+                        console.error('Syntax error:', e);
+                    }
+                }
+            })
+            .catch(e => console.error('Fetch error:', e));
+    </script>
+</body>
+</html>

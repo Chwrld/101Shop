@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Service Report API Test</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+        .test-section { background: white; padding: 20px; margin: 10px 0; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .success { color: green; }
+        .error { color: red; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 3px; }
+        button:hover { background: #0056b3; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        .log { margin: 10px 0; padding: 10px; background: #f8f9fa; border-left: 3px solid #007bff; }
+    </style>
+</head>
+<body>
+    <h1>Service Report API Connection Test</h1>
+    
+    <div class="test-section">
+        <h2>Step 1: Test Database & API Files</h2>
+        <button onclick="testConnection()">Run Connection Test</button>
+        <div id="connection-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Step 2: Load Customers</h2>
+        <button onclick="loadCustomers()">Load Customers</button>
+        <div id="customers-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Step 3: Load Appliances</h2>
+        <button onclick="loadAppliances()">Load All Appliances</button>
+        <div id="appliances-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Step 4: Load Parts</h2>
+        <button onclick="loadParts()">Load Parts</button>
+        <div id="parts-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Step 5: Load Staff</h2>
+        <button onclick="loadStaff()">Load Staff</button>
+        <div id="staff-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Step 6: Create Test Service Report</h2>
+        <button onclick="createTestReport()">Create Test Report (Minimal)</button>
+        <button onclick="createFullReport()">Create Full Test Report</button>
+        <div id="create-result"></div>
+    </div>
+
+    <script>
+        const API_BASE = '../backend/api/';
+
+        function log(elementId, message, isError = false) {
+            const div = document.getElementById(elementId);
+            const className = isError ? 'error' : 'success';
+            div.innerHTML += `<div class="log ${className}">${message}</div>`;
+        }
+
+        function testConnection() {
+            $('#connection-result').html('<p>Testing...</p>');
+            window.location.href = 'test_service_create_connection.php';
+        }
+
+        async function loadCustomers() {
+            try {
+                log('customers-result', 'Fetching customers...', false);
+                const response = await $.ajax({
+                    url: API_BASE + 'customer_appliance_api.php?action=getAllCustomers&page=1&itemsPerPage=10',
+                    type: 'GET',
+                    dataType: 'json'
+                });
+                
+                if (response.success && response.data) {
+                    const customers = response.data.customers || response.data.data || response.data;
+                    log('customers-result', `✅ Loaded ${customers.length} customers`, false);
+                    log('customers-result', '<pre>' + JSON.stringify(customers.slice(0, 3), null, 2) + '</pre>', false);
+                } else {
+                    log('customers-result', '❌ Failed to load customers: ' + (response.message || 'Unknown error'), true);
+                }
+            } catch (error) {
+                log('customers-result', '❌ Error: ' + (error.responseJSON?.message || error.statusText), true);
+            }
+        }
+
+        async function loadAppliances() {
+            try {
+                log('appliances-result', 'Fetching appliances...', false);
+                const response = await $.ajax({
+                    url: API_BASE + 'customer_appliance_api.php?action=getAllAppliances',
+                    type: 'GET',
+                    dataType: 'json'
+                });
+                
+                if (response.success && response.data) {
+                    const appliances = Array.isArray(response.data) ? response.data : [response.data];
+                    log('appliances-result', `✅ Loaded ${appliances.length} appliances`, false);
+                    log('appliances-result', '<pre>' + JSON.stringify(appliances.slice(0, 3), null, 2) + '</pre>', false);
+                } else {
+                    log('appliances-result', '❌ Failed to load appliances: ' + (response.message || 'Unknown error'), true);
+                }
+            } catch (error) {
+                log('appliances-result', '❌ Error: ' + (error.responseJSON?.message || error.statusText), true);
+            }
+        }
+
+        async function loadParts() {
+            try {
+                log('parts-result', 'Fetching parts...', false);
+                const response = await $.ajax({
+                    url: API_BASE + 'parts_api.php?action=getAllParts&page=1&itemsPerPage=10',
+                    type: 'GET',
+                    dataType: 'json'
+                });
+                
+                if (response.success && response.data) {
+                    const parts = response.data.parts || response.data.data || response.data;
+                    log('parts-result', `✅ Loaded ${parts.length} parts`, false);
+                    log('parts-result', '<pre>' + JSON.stringify(parts.slice(0, 3), null, 2) + '</pre>', false);
+                } else {
+                    log('parts-result', '❌ Failed to load parts: ' + (response.message || 'Unknown error'), true);
+                }
+            } catch (error) {
+                log('parts-result', '❌ Error: ' + (error.responseJSON?.message || error.statusText), true);
+            }
+        }
+
+        async function loadStaff() {
+            try {
+                log('staff-result', 'Fetching staff...', false);
+                const response = await $.ajax({
+                    url: API_BASE + 'staff_api.php?action=getAllStaffs&page=1&itemsPerPage=10',
+                    type: 'GET',
+                    dataType: 'json'
+                });
+                
+                if (response.success && response.data) {
+                    const staff = response.data.staffs || response.data.data || response.data;
+                    log('staff-result', `✅ Loaded ${staff.length} staff members`, false);
+                    log('staff-result', '<pre>' + JSON.stringify(staff.slice(0, 3), null, 2) + '</pre>', false);
+                } else {
+                    log('staff-result', '❌ Failed to load staff: ' + (response.message || 'Unknown error'), true);
+                }
+            } catch (error) {
+                log('staff-result', '❌ Error: ' + (error.responseJSON?.message || error.statusText), true);
+            }
+        }
+
+        async function createTestReport() {
+            try {
+                log('create-result', 'Creating minimal test report...', false);
+                
+                const testData = {
+                    customer_name: 'Test Customer',
+                    customer_id: null,
+                    appliance_name: 'Test Appliance',
+                    appliance_id: null,
+                    date_in: '2025-12-06',
+                    status: 'received',
+                    dealer: 'Test Dealer',
+                    findings: 'Test findings',
+                    remarks: 'Test remarks',
+                    location: ['shop'],
+                    service_types: ['repair'],
+                    complaint: 'Test complaint',
+                    labor: 0,
+                    pullout_delivery: 0,
+                    parts_total_charge: 0,
+                    service_charge: 0,
+                    total_amount: 0,
+                    receptionist: '',
+                    manager: '',
+                    technician: '',
+                    released_by: '',
+                    parts: []
+                };
+
+                log('create-result', '<strong>Payload:</strong><pre>' + JSON.stringify(testData, null, 2) + '</pre>', false);
+
+                const response = await $.ajax({
+                    url: API_BASE + 'service_api.php?action=create',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    dataType: 'json',
+                    data: JSON.stringify(testData)
+                });
+
+                if (response.success) {
+                    log('create-result', '✅ Report created successfully!', false);
+                    log('create-result', '<strong>Response:</strong><pre>' + JSON.stringify(response, null, 2) + '</pre>', false);
+                } else {
+                    log('create-result', '❌ Failed: ' + response.message, true);
+                }
+            } catch (error) {
+                log('create-result', '❌ Error: ' + (error.responseJSON?.message || error.statusText || error.message), true);
+                if (error.responseText) {
+                    log('create-result', '<strong>Response:</strong><pre>' + error.responseText + '</pre>', true);
+                }
+            }
+        }
+
+        async function createFullReport() {
+            try {
+                log('create-result', 'Creating full test report with sample data...', false);
+                
+                // First, get real customer, appliance, and part IDs
+                log('create-result', 'Fetching real data for test...', false);
+                
+                const customersResp = await $.get(API_BASE + 'customer_appliance_api.php?action=getAllCustomers&page=1&itemsPerPage=1');
+                const appliancesResp = await $.get(API_BASE + 'customer_appliance_api.php?action=getAllAppliances');
+                const partsResp = await $.get(API_BASE + 'parts_api.php?action=getAllParts&page=1&itemsPerPage=1');
+
+                const customers = customersResp.data?.customers || customersResp.data?.data || [];
+                const appliances = Array.isArray(appliancesResp.data) ? appliancesResp.data : [];
+                const parts = partsResp.data?.parts || partsResp.data?.data || [];
+
+                if (customers.length === 0 || appliances.length === 0) {
+                    log('create-result', '❌ No customers or appliances found. Please add some first.', true);
+                    return;
+                }
+
+                const customer = customers[0];
+                const appliance = appliances[0];
+                
+                const testData = {
+                    customer_name: customer.FullName || customer.first_name + ' ' + customer.last_name,
+                    customer_id: customer.customer_id,
+                    appliance_name: appliance.brand || 'Test Appliance',
+                    appliance_id: appliance.appliance_id,
+                    date_in: '2025-12-06',
+                    status: 'received',
+                    dealer: 'Test Dealer',
+                    findings: 'Test findings',
+                    remarks: 'Test remarks',
+                    location: ['shop'],
+                    service_types: ['repair'],
+                    complaint: 'Test complaint',
+                    labor: 500,
+                    pullout_delivery: 200,
+                    parts_total_charge: parts.length > 0 ? parts[0].price : 0,
+                    service_charge: 0,
+                    total_amount: 700 + (parts.length > 0 ? parts[0].price : 0),
+                    receptionist: '',
+                    manager: '',
+                    technician: '',
+                    released_by: '',
+                    parts: parts.length > 0 ? [{
+                        part_name: parts[0].part_no,
+                        part_id: parts[0].part_id,
+                        quantity: 1,
+                        unit_price: parts[0].price,
+                        parts_total: parts[0].price
+                    }] : []
+                };
+
+                log('create-result', '<strong>Payload:</strong><pre>' + JSON.stringify(testData, null, 2) + '</pre>', false);
+
+                const response = await $.ajax({
+                    url: API_BASE + 'service_api.php?action=create',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    dataType: 'json',
+                    data: JSON.stringify(testData)
+                });
+
+                if (response.success) {
+                    log('create-result', '✅ Full report created successfully!', false);
+                    log('create-result', '<strong>Response:</strong><pre>' + JSON.stringify(response, null, 2) + '</pre>', false);
+                } else {
+                    log('create-result', '❌ Failed: ' + response.message, true);
+                }
+            } catch (error) {
+                log('create-result', '❌ Error: ' + (error.responseJSON?.message || error.statusText || error.message), true);
+                if (error.responseText) {
+                    log('create-result', '<strong>Response:</strong><pre>' + error.responseText + '</pre>', true);
+                }
+            }
+        }
+    </script>
+</body>
+</html>

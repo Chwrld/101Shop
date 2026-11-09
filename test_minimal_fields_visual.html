@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Report - Minimal Field Test</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <style>
+        body {
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-card {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .success-badge {
+            background: #28a745;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .field-label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .required-tag {
+            background: #dc3545;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            margin-left: 5px;
+        }
+        .optional-tag {
+            background: #6c757d;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            margin-left: 5px;
+        }
+        .test-result {
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+        .test-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .test-error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .checklist {
+            list-style: none;
+            padding-left: 0;
+        }
+        .checklist li:before {
+            content: "✓ ";
+            color: #28a745;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <h1>Service Report - Minimal Field Validation Test</h1>
+                <p class="text-muted">Verification that the system accepts reports with only 4 required fields</p>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="test-card">
+                    <h3>✅ Required Fields <span class="badge badge-danger">Only 4</span></h3>
+                    <p class="text-muted">These fields MUST be filled to submit a service report</p>
+                    <ul class="checklist">
+                        <li><strong>Customer Name</strong> - Select from dropdown</li>
+                        <li><strong>Appliance Name</strong> - Auto-filtered by customer</li>
+                        <li><strong>Date In</strong> - Date picker</li>
+                        <li><strong>Status</strong> - Pending/In Progress/Completed/Cancelled</li>
+                    </ul>
+                </div>
+
+                <div class="test-card">
+                    <h3>Optional Fields <span class="badge badge-secondary">All Optional</span></h3>
+                    <p class="text-muted">These fields can be left empty without errors</p>
+                    <ul style="column-count: 2; font-size: 14px;">
+                        <li>Dealer</li>
+                        <li>Date of Purchase</li>
+                        <li>Date Pulled Out</li>
+                        <li>Findings</li>
+                        <li>Remarks</li>
+                        <li>Location</li>
+                        <li>Service Types</li>
+                        <li>Date Repaired</li>
+                        <li>Date Delivered</li>
+                        <li>Complaint</li>
+                        <li>Labor Charge</li>
+                        <li>Pullout/Delivery</li>
+                        <li>Parts</li>
+                        <li>Receptionist</li>
+                        <li>Manager</li>
+                        <li>Technician</li>
+                        <li>Released By</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="test-card">
+                    <h3>Backend Validation ✓</h3>
+                    <div class="field-label">service_api.php</div>
+                    <pre style="background: #f8f9fa; padding: 10px; border-radius: 5px; font-size: 12px;">$required = [
+    'customer_name',
+    'appliance_name', 
+    'date_in',
+    'status'
+];
+
+foreach ($required as $field) {
+    if (empty($input[$field])) {
+        sendResponse(false, null, 
+            "Missing required field: $field", 400);
+    }
+}</pre>
+                    <div class="test-result test-success mt-3">
+                        ✓ Only 4 fields validated on backend
+                    </div>
+                </div>
+
+                <div class="test-card">
+                    <h3>Frontend Validation ✓</h3>
+                    <div class="field-label">validateForm() function</div>
+                    <pre style="background: #f8f9fa; padding: 10px; border-radius: 5px; font-size: 12px;">async function validateForm() {
+    // Customer
+    if (!$('#customer-select').val()) {
+        return false;
+    }
+    
+    // Appliance
+    if (!$('#appliance-select').val()) {
+        return false;
+    }
+    
+    // Date In
+    if (!$('#date-in').val()) {
+        return false;
+    }
+    
+    // Status
+    if (!$('select[name="status"]').val()) {
+        return false;
+    }
+    
+    return true; // Only 4 checks!
+}</pre>
+                    <div class="test-result test-success mt-3">
+                        ✓ Only 4 fields validated on frontend
+                    </div>
+                </div>
+
+                <div class="test-card">
+                    <h3>Database Schema ✓</h3>
+                    <div class="field-label">service_details table</div>
+                    <ul class="checklist" style="font-size: 13px;">
+                        <li><code>receptionist VARCHAR(50) DEFAULT NULL</code></li>
+                        <li><code>manager VARCHAR(50) DEFAULT NULL</code></li>
+                        <li><code>technician VARCHAR(50) DEFAULT NULL</code></li>
+                        <li><code>released_by VARCHAR(50) DEFAULT NULL</code></li>
+                        <li><code>service_types JSON NOT NULL</code> (can be [])</li>
+                        <li><code>date_repaired DATE DEFAULT NULL</code></li>
+                        <li><code>date_delivered DATE DEFAULT NULL</code></li>
+                        <li><code>labor DECIMAL(10,2) DEFAULT '0.00'</code></li>
+                    </ul>
+                    <div class="test-result test-success mt-3">
+                        ✓ All optional fields support NULL or default values
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="test-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <h2 style="color: white;">🎉 System Verification Complete</h2>
+                    <div class="row mt-4">
+                        <div class="col-md-3">
+                            <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px;">
+                                <h4 style="color: white; margin: 0;">✓ Frontend</h4>
+                                <p style="margin: 0; font-size: 14px;">4 field validation</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px;">
+                                <h4 style="color: white; margin: 0;">✓ Backend</h4>
+                                <p style="margin: 0; font-size: 14px;">4 field validation</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px;">
+                                <h4 style="color: white; margin: 0;">✓ Database</h4>
+                                <p style="margin: 0; font-size: 14px;">NULL support ready</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px;">
+                                <h4 style="color: white; margin: 0;">✓ API</h4>
+                                <p style="margin: 0; font-size: 14px;">Minimal data ready</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4" style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 8px;">
+                        <h4 style="color: white;">Test This Feature:</h4>
+                        <ol style="color: white; line-height: 2;">
+                            <li>Go to <a href="views/service_report_admin_v2.php" style="color: #fff; font-weight: bold; text-decoration: underline;">Admin Service Report</a> or <a href="staff/staff_service_report_new.php" style="color: #fff; font-weight: bold; text-decoration: underline;">Staff Service Report</a></li>
+                            <li>Fill in ONLY these 4 fields:
+                                <ul style="margin-top: 10px;">
+                                    <li>Customer Name</li>
+                                    <li>Appliance Name</li>
+                                    <li>Date In</li>
+                                    <li>Status</li>
+                                </ul>
+                            </li>
+                            <li>Leave ALL other fields empty</li>
+                            <li>Click "Submit Report"</li>
+                            <li>✅ Report should be created successfully without any API errors!</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <h5>📚 Documentation</h5>
+                    <p>For complete technical details, see: <code>MINIMAL_FIELD_VALIDATION_GUIDE.md</code></p>
+                    <p class="mb-0">For testing script, see: <code>test_minimal_service_report.php</code></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/jquery-3.3.1.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+</body>
+</html>

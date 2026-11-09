@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  # PHP/Apache Web Server
+  web:
+    build: .
+    container_name: repair-system-web
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/html
+    environment:
+      DB_HOST: mysql
+      DB_USER: root
+      DB_PASSWORD: rootpassword
+      DB_NAME: repairsystem
+    depends_on:
+      - mysql
+    networks:
+      - repair-network
+
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: repair-system-mysql
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: repairsystem
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./database/repairsystem.sql:/docker-entrypoint-initdb.d/repairsystem.sql
+    networks:
+      - repair-network
+
+  # phpMyAdmin (Optional - for database management)
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: repair-system-phpmyadmin
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: root
+      PMA_PASSWORD: rootpassword
+    depends_on:
+      - mysql
+    networks:
+      - repair-network
+
+networks:
+  repair-network:
+    driver: bridge
+
+volumes:
+  mysql-data:

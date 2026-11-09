@@ -1,0 +1,23 @@
+{
+  "name": "codewithera/repair-system",
+  "description": "A repair service management system",
+  "type": "project",
+  "require": {
+    "php": ">=7.4",
+    "phpmailer/phpmailer": "^6.11"
+  },
+  "autoload": {
+    "psr-4": {
+      "App\\": "src/"
+    }
+  },
+  "config": {
+    "optimize-autoloader": true,
+    "sort-packages": true
+  },
+  "scripts": {
+    "post-install-cmd": [
+      "php -r \"file_exists('config/mail.php') || copy('config/mail.example.php', 'config/mail.php');\""
+    ]
+  }
+}

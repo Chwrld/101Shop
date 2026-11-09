@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Staff Service Report APIs</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { background-color: #d4edda; }
+        .error { background-color: #f8d7da; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        pre { background-color: #f4f4f4; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Staff Service Report API Test</h1>
+    <p>Testing all APIs used by staff_service_report.php</p>
+
+    <div class="test-section">
+        <h3>Test 1: Get All Service Reports</h3>
+        <button onclick="testServiceReports()">Test Service API</button>
+        <div id="serviceResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 2: Get All Customers</h3>
+        <button onclick="testCustomers()">Test Customer API</button>
+        <div id="customerResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 3: Get All Parts</h3>
+        <button onclick="testParts()">Test Parts API</button>
+        <div id="partsResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 4: Get All Staff</h3>
+        <button onclick="testStaff()">Test Staff API</button>
+        <div id="staffResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 5: Get Service Prices</h3>
+        <button onclick="testServicePrices()">Test Service Price API</button>
+        <div id="servicePriceResult"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = '/RepairSystem-main/backend/api/';
+        
+        async function testServiceReports() {
+            const resultDiv = document.getElementById('serviceResult');
+            resultDiv.innerHTML = '<p>Testing...</p>';
+            
+            try {
+                const response = await $.ajax({
+                    url: API_BASE_URL + 'service_api.php?action=getAll',
+                    method: 'GET',
+                    dataType: 'json'
+                });
+                
+                console.log('Service Reports Response:', response);
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        <p><strong>✓ Success!</strong></p>
+                        <p>Found ${response.data ? response.data.length : 0} service reports</p>
+                        <pre>${JSON.stringify(response, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Service Reports Error:', error);
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <p><strong>✗ Error!</strong></p>
+                        <p>${error.statusText || error.message}</p>
+                        <pre>${JSON.stringify(error, null, 2)}</pre>
+                    </div>
+                `;
+            }
+        }
+
+        async function testCustomers() {
+            const resultDiv = document.getElementById('customerResult');
+            resultDiv.innerHTML = '<p>Testing...</p>';
+            
+            try {
+                const response = await $.ajax({
+                    url: API_BASE_URL + 'customer_appliance_api.php?action=getAllCustomers&page=1&itemsPerPage=1000',
+                    method: 'GET',
+                    dataType: 'json'
+                });
+                
+                console.log('Customers Response:', response);
+                const customerCount = response.data?.customers?.length || 0;
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        <p><strong>✓ Success!</strong></p>
+                        <p>Found ${customerCount} customers</p>
+                        <pre>${JSON.stringify(response, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Customers Error:', error);
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <p><strong>✗ Error!</strong></p>
+                        <p>${error.statusText || error.message}</p>
+                        <pre>${JSON.stringify(error, null, 2)}</pre>
+                    </div>
+                `;
+            }
+        }
+
+        async function testParts() {
+            const resultDiv = document.getElementById('partsResult');
+            resultDiv.innerHTML = '<p>Testing...</p>';
+            
+            try {
+                const response = await $.ajax({
+                    url: API_BASE_URL + 'parts_api.php?action=getAllParts&page=1&itemsPerPage=1000',
+                    method: 'GET',
+                    dataType: 'json'
+                });
+                
+                console.log('Parts Response:', response);
+                const partsCount = response.data?.parts?.length || 0;
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        <p><strong>✓ Success!</strong></p>
+                        <p>Found ${partsCount} parts</p>
+                        <pre>${JSON.stringify(response, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Parts Error:', error);
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <p><strong>✗ Error!</strong></p>
+                        <p>${error.statusText || error.message}</p>
+                        <pre>${JSON.stringify(error, null, 2)}</pre>
+                    </div>
+                `;
+            }
+        }
+
+        async function testStaff() {
+            const resultDiv = document.getElementById('staffResult');
+            resultDiv.innerHTML = '<p>Testing...</p>';
+            
+            try {
+                const response = await $.ajax({
+                    url: API_BASE_URL + 'staff_api.php?action=getAllStaffs&page=1&itemsPerPage=1000',
+                    method: 'GET',
+                    dataType: 'json'
+                });
+                
+                console.log('Staff Response:', response);
+                const staffCount = response.data?.staffs?.length || 0;
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        <p><strong>✓ Success!</strong></p>
+                        <p>Found ${staffCount} staff members</p>
+                        <pre>${JSON.stringify(response, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Staff Error:', error);
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <p><strong>✗ Error!</strong></p>
+                        <p>${error.statusText || error.message}</p>
+                        <pre>${JSON.stringify(error, null, 2)}</pre>
+                    </div>
+                `;
+            }
+        }
+
+        async function testServicePrices() {
+            const resultDiv = document.getElementById('servicePriceResult');
+            resultDiv.innerHTML = '<p>Testing...</p>';
+            
+            try {
+                const response = await $.ajax({
+                    url: API_BASE_URL + 'service_price_api.php?action=getAll',
+                    method: 'GET',
+                    dataType: 'json'
+                });
+                
+                console.log('Service Prices Response:', response);
+                const priceCount = response.data?.length || 0;
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        <p><strong>✓ Success!</strong></p>
+                        <p>Found ${priceCount} service types</p>
+                        <pre>${JSON.stringify(response, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Service Prices Error:', error);
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <p><strong>✗ Error!</strong></p>
+                        <p>${error.statusText || error.message}</p>
+                        <pre>${JSON.stringify(error, null, 2)}</pre>
+                    </div>
+                `;
+            }
+        }
+
+        // Auto-run all tests on page load
+        window.onload = function() {
+            console.log('=== Starting API Tests ===');
+            setTimeout(() => {
+                testServiceReports();
+                setTimeout(() => testCustomers(), 500);
+                setTimeout(() => testParts(), 1000);
+                setTimeout(() => testStaff(), 1500);
+                setTimeout(() => testServicePrices(), 2000);
+            }, 500);
+        };
+    </script>
+</body>
+</html>

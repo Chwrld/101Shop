@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Staff Service Report - API Test</title>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+        .info { color: blue; }
+        pre { background: #f0f0f0; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Staff Service Report - API Loading Test</h1>
+    
+    <div class="test-section">
+        <h2>Test 1: Customer API Endpoint</h2>
+        <p>Testing if the customer API is responding...</p>
+        <div id="test1-result"></div>
+        <button onclick="testCustomerAPI()">Run Test</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 2: Form Element Verification</h2>
+        <p>Checking if form elements are present...</p>
+        <div id="test2-result"></div>
+        <button onclick="testFormElements()">Run Test</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 3: JavaScript Initialization</h2>
+        <p>Testing if JavaScript is initializing properly...</p>
+        <div id="test3-result"></div>
+        <button onclick="testJavaScriptInit()">Run Test</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Console Output</h2>
+        <pre id="console-output"></pre>
+    </div>
+
+    <script>
+        const CUSTOMER_APPLIANCE_API_URL = '../backend/api/customer_appliance_api.php';
+        let testLog = [];
+
+        function log(message) {
+            testLog.push(message);
+            $('#console-output').text(testLog.join('\n'));
+            console.log(message);
+        }
+
+        function testCustomerAPI() {
+            log('=== TEST 1: Customer API Endpoint ===');
+            const url = CUSTOMER_APPLIANCE_API_URL + '?action=getAllCustomers&page=1&itemsPerPage=5';
+            log('URL: ' + url);
+            
+            $.ajax({
+                url: url,
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    log('✓ API Response Received');
+                    log('Response: ' + JSON.stringify(response, null, 2));
+                    
+                    if (response.success) {
+                        log('✓ SUCCESS: Response is successful');
+                        if (response.data.customers) {
+                            log('✓ SUCCESS: Customers array found with ' + response.data.customers.length + ' customers');
+                            response.data.customers.forEach((c, idx) => {
+                                log(`  Customer ${idx + 1}: ID=${c.customer_id}, Name=${c.FullName}`);
+                            });
+                        } else {
+                            log('✗ ERROR: Customers array not found in response');
+                        }
+                    } else {
+                        log('✗ ERROR: Response success is false');
+                    }
+                    
+                    $('#test1-result').html('<p class="success">✓ Test Completed - Check console output</p>');
+                },
+                error: function(xhr, status, error) {
+                    log('✗ ERROR: API Call Failed');
+                    log('Status: ' + status);
+                    log('Error: ' + error);
+                    log('Response: ' + xhr.responseText);
+                    $('#test1-result').html('<p class="error">✗ API Call Failed - Check console</p>');
+                }
+            });
+        }
+
+        function testFormElements() {
+            log('=== TEST 2: Form Element Verification ===');
+            
+            // This test needs to run on the actual staff page, so just show instructions
+            log('To test form elements, please:');
+            log('1. Open staff/staff_service_report.php');
+            log('2. Open browser console (F12)');
+            log('3. Run these commands:');
+            log('   - console.log("customer-search exists:", $("#customer-search").length > 0)');
+            log('   - console.log("customer-select exists:", $("#customer-select").length > 0)');
+            log('   - console.log("customersList loaded:", window.customersList ? window.customersList.length : 0)');
+            log('   - console.log("renderCustomerSuggestions exists:", typeof renderCustomerSuggestions)');
+            
+            $('#test2-result').html('<p class="info">See console output for instructions</p>');
+        }
+
+        function testJavaScriptInit() {
+            log('=== TEST 3: JavaScript Initialization ===');
+            log('This test should be run in the actual staff service report page.');
+            log('');
+            log('Steps:');
+            log('1. Open staff/staff_service_report.php');
+            log('2. Open browser console (F12)');
+            log('3. Check for any JavaScript errors');
+            log('4. Run: window.customersList');
+            log('   - If you see an array of customers, loading is working');
+            log('   - If undefined, check Network tab to see if API was called');
+            log('5. Check Network tab and filter by "customer_appliance_api.php"');
+            log('   - Look for successful (200) responses');
+            log('   - Check the response preview to see data');
+            
+            $('#test3-result').html('<p class="info">See console output for instructions</p>');
+        }
+
+        // Auto-run first test
+        $(document).ready(function() {
+            log('Page loaded. Ready to test.');
+            log('Click the "Run Test" buttons to start diagnostics.');
+        });
+    </script>
+</body>
+</html>

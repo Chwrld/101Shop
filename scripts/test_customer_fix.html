@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Staff Service Report - Customer Loading Test</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+    <style>
+        body { padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        code { background: #f5f5f5; padding: 2px 5px; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <h1>🔍 Staff Service Report - Customer Loading Diagnostic</h1>
+        
+        <div class="test-section info">
+            <h4>Test Instructions:</h4>
+            <ol>
+                <li>Open browser developer console (F12)</li>
+                <li>Go to staff service report page</li>
+                <li>Look for <code>[INIT]</code> logs in console</li>
+                <li>Click on "Search customer by name" input field</li>
+                <li>Verify customers appear in dropdown below the input</li>
+                <li>Type "Lala" to filter customers</li>
+                <li>Click a customer to select it</li>
+                <li>Verify appliances populate automatically</li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h4>What Changed:</h4>
+            <p><strong>Problem:</strong> Customer search was initialized BEFORE data was loaded</p>
+            <p><strong>Solution:</strong> Reordered initialization to load data FIRST, then set up search handlers</p>
+            <p><strong>Result:</strong> <code>window.customersList</code> is now populated before search input is active</p>
+        </div>
+
+        <div class="test-section">
+            <h4>Console Logs to Look For:</h4>
+            <ul>
+                <li><code>[INIT] initializeServiceReport started</code></li>
+                <li><code>[INIT] Step 3: loadInitialData</code></li>
+                <li><code>[DEBUG] Customers loaded. window.customersList: [...]</code></li>
+                <li><code>[INIT] Step 4: initCustomerSearch</code></li>
+                <li><code>[DEBUG] renderCustomerSuggestions called with: [text]</code></li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h4>Expected Result:</h4>
+            <div class="success">
+                ✅ Customers populate in search suggestions<br>
+                ✅ Filtering works when typing<br>
+                ✅ Appliances load when customer selected<br>
+                ✅ Form can be submitted with all data
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h4>Troubleshooting:</h4>
+            <ul>
+                <li>If no suggestions appear: Check console for errors</li>
+                <li>If customers don't load: Check Network tab for API calls</li>
+                <li>If appliances don't populate: Verify customer-id field is being set</li>
+            </ul>
+        </div>
+
+        <div class="test-section info">
+            <h4>Quick Debug Commands (paste in console):</h4>
+            <pre><code>
+// Check if customers are loaded
+console.log('Customers loaded:', window.customersList);
+
+// Manually render suggestions
+renderCustomerSuggestions('');
+
+// Check form state
+console.log('Customer ID field:', $('#customer-id').val());
+console.log('Hidden select value:', $('#customer-select').val());
+            </code></pre>
+        </div>
+
+        <a href="http://localhost/RepairSystem-main/staff/staff_service_report.php" class="btn btn-primary">
+            Open Staff Service Report Page
+        </a>
+    </div>
+</body>
+</html>

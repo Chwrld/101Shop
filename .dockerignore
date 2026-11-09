@@ -1,0 +1,10 @@
+.git
+.gitignore
+*.md
+!README.md
+node_modules
+vendor/phpmailer/.git
+.env
+.DS_Store
+Thumbs.db
+*.log

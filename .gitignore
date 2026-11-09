@@ -1,0 +1,30 @@
+# IDE and Editor files
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Dependencies
+/vendor/
+/node_modules/
+
+# Environment and Configuration
+/config/mail.php
+*.env
+.env.*
+!.env.example
+
+# Logs and Cache
+*.log
+/logs/
+/cache/
+/temp/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

@@ -1340,7 +1340,7 @@ $userSession = $auth->requireAuth('admin');
                                                         <option value="Completed">Completed</option>
                                                         <option value="Pending">Pending</option>
                                                         <option value="Under Repair">Under Repair</option>
-                                                        <option value="Unrepairable">Unrepairable</option>
+                                                        <option value="Release Out">Released Out</option>
                                                     </select>
                                                 </div>
                                             </div>

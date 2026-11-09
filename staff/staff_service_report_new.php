@@ -874,7 +874,6 @@ try {
                                             <option value="">Select Status</option>
                                             <option value="Pending">Pending</option>
                                             <option value="Under Repair">Under Repair</option>
-                                            <option value="Unrepairable">Unrepairable</option>
                                             <option value="Release Out">Release Out</option>
                                             <option value="Completed">Completed</option>
                                         </select>

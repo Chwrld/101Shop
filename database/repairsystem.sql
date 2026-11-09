@@ -67,16 +67,7 @@ CREATE TABLE `appliances` (
 --
 
 INSERT INTO `appliances` (`appliance_id`, `customer_id`, `brand`, `product`, `model_no`, `serial_no`, `date_in`, `warranty_end`, `category`, `status`) VALUES
-(3, 8, 'oke na ba?', 'TV', '0G3R5CZNA04756T', 'UN65TU7000FXZA', '2025-06-27', '2025-07-11', 'Television', 'Active'),
-(5, 10, 'OKI??', 'Washing Machine', '0G3R5CZNA04756T', 'UN65TU7000FXZA', '2025-06-27', '2025-07-11', 'Air Conditioner', 'Active'),
-(8, 11, 'Samsung', 'Washing Machine', '0G3R5CZNA04756T', 'UN65TU7000FXZA', '2025-06-28', '2025-06-27', 'Oven', 'Active'),
-(10, 13, 'Samsung', 'Oven', '0G3R5CZNA04756T', 'UN65TU7000FXZA', '2025-07-09', '2025-06-28', 'Oven', 'Active'),
-(12, 14, 'Samsung', 'Washing Machine', '0G3R5CZNA04756T', 'UN65TU7000FXZA', '2025-06-27', '2025-06-27', 'Oven', 'Active'),
-(13, 15, 'OKEEEEEEEEEE', 'Washing Machine', '0G3R5CZNA04756T', 'UN65TU7000FXZA', '2025-06-27', '2025-06-27', 'Washing Machine', 'Active'),
-(15, 17, 'Samsung', 'Washing Machine', '0G3R5CZNA04756T', 'UN65TU7000FXZA', '2025-07-17', '2025-07-18', 'Washing Machine', 'Active'),
-(16, 6, 'acer', 'laptop', '0G3R5CZNA04756T', 'UN65TU7000FXZA', '2025-08-13', '2025-08-16', 'Other', 'Active'),
-(17, 6, 'lenovo', 'laptop', '0G3R5CZNA04756T', 'UN65TU7000FXZA', '2025-08-13', '2025-08-16', 'Other', 'Active'),
-(19, 18, 'Nokia', 'iphone-nokia', '23532453456', '12324353464', '2025-10-04', '2025-10-11', 'Other', 'Active');
+(1, 1, 'Nokia', 'iphone-nokia', '23532453456', '12324353464', '2025-10-04', '2025-10-11', 'Other', 'Active');
 
 -- --------------------------------------------------------
 
@@ -97,16 +88,7 @@ CREATE TABLE `customers` (
 --
 
 INSERT INTO `customers` (`customer_id`, `first_name`, `last_name`, `address`, `phone_no`) VALUES
-(6, 'Jun Antoni Reus', 'Indino', 'Maya', '09690540108'),
-(7, 'ren', 'oke', 'ambot', '09690540108'),
-(8, 'oke', 'oke', 'oke', '1234564587869'),
-(10, 'OKOKOKOK', 'Indino', 'sdsgdsf', '1234564587869'),
-(11, 'oke', 'Indin0', 'efSFW', '09690540108'),
-(13, 'Ren ren', 'Indino', 'Maya mayA', '09690540108'),
-(14, 'lj', 'indino', 'minta\'l', '1234564587869'),
-(15, 'Louise Juliet', 'henson', 'mintal hospital', '09690540108'),
-(17, 'Earl', 'Pangit', 'mars', '1234567899'),
-(18, 'new ', 'customer ', 'spm', '09691134567');
+(1, 'Jun Antoni Reus', 'Indino', 'Maya', '09690540108');
 
 -- --------------------------------------------------------
 
@@ -127,9 +109,7 @@ CREATE TABLE `parts` (
 --
 
 INSERT INTO `parts` (`part_id`, `part_no`, `description`, `price`, `quantity_stock`) VALUES
-(1, 'blah', 'very gamit kaayo sure oi', '1000.00', 14),
-(3, 'blahnhhh', 'sagdfsgvxcvd', '124.00', 200),
-(4, 'okokoe', 'nice ni sya ', '50.00', 27);
+(1, 'blah', 'very gamit kaayo sure oi', '1000.00', 14);
 
 -- --------------------------------------------------------
 
@@ -151,16 +131,7 @@ CREATE TABLE `parts_used` (
 --
 
 INSERT INTO `parts_used` (`part_used_id`, `report_id`, `part_name`, `quantity`, `unit_price`, `parts_total`) VALUES
-(9, 7, 'blahnhhh', 2, '124.00', '248.00'),
-(17, 9, 'blah', 1, '1000.00', '1000.00'),
-(18, 9, 'blahnhhh', 1, '124.00', '124.00'),
-(19, 9, 'okokoe', 1, '50.00', '50.00'),
-(29, 6, 'okokoe', 3, '50.00', '150.00'),
-(30, 6, 'blahnhhh', 3, '124.00', '372.00'),
-(46, 11, 'blahnhhh', 1, '124.00', '124.00'),
-(50, 10, 'blahnhhh', 2, '124.00', '248.00'),
-(51, 10, 'blahnhhh', 3, '124.00', '372.00'),
-(52, 10, 'okokoe', 3, '50.00', '150.00');
+(1, 1, 'blahnhhh', 2, '124.00', '248.00');
 
 -- --------------------------------------------------------
 
@@ -191,11 +162,7 @@ CREATE TABLE `service_details` (
 --
 
 INSERT INTO `service_details` (`detail_id`, `report_id`, `service_types`, `service_charge`, `date_repaired`, `date_delivered`, `complaint`, `labor`, `pullout_delivery`, `parts_total_charge`, `total_amount`, `receptionist`, `manager`, `technician`, `released_by`) VALUES
-(9, 7, '[\"installation\"]', '500.00', NULL, NULL, NULL, NULL, NULL, '248.00', '748.00', 'ok (Technician)', 'ok (Technician)', 'ok (Technician)', 'okokoeoeoke (Technician)'),
-(14, 9, '[\"installation\", \"repair\", \"cleaning\"]', '1000.00', '2025-08-19', '2025-08-20', NULL, '3.00', '3.00', '1174.00', '2180.00', 'adminactivee (Secretary)', 'admin123 (Manager)', 'oklizz (Technician)', 'adminactivee (Secretary)'),
-(18, 6, '[\"installation\"]', '500.00', NULL, NULL, NULL, NULL, NULL, '522.00', '1022.00', 'ok (Technician)', 'ok (Technician)', 'rennotoke (Technician)', 'ok (Technician)'),
-(25, 11, '[\"installation\"]', '500.00', NULL, NULL, NULL, '1.00', '1.00', '124.00', '626.00', 'staff (Secretary)', 'ren (Manager)', 'oklizz (Technician)', 'staff (Secretary)'),
-(27, 10, '[\"installation\", \"repair\"]', '800.00', '2025-08-22', '2025-08-25', 'okeoke', '7.00', '4.00', '770.00', '1581.00', 'renadmin (Secretary)', 'admin123 (Manager)', 'oklizz (Technician)', 'renadmin (Secretary)');
+(1, 1, '[\"installation\"]', '500.00', NULL, NULL, NULL, NULL, NULL, '248.00', '748.00', 'ok (Technician)', 'ok (Technician)', 'ok (Technician)', 'okokoeoeoke (Technician)');
 
 -- --------------------------------------------------------
 
@@ -245,11 +212,7 @@ CREATE TABLE `service_reports` (
 --
 
 INSERT INTO `service_reports` (`report_id`, `customer_name`, `appliance_name`, `date_in`, `status`, `dealer`, `dop`, `date_pulled_out`, `findings`, `remarks`, `location`) VALUES
-(6, 'Jun Antoni Reus Indino', 'OKEEEEEEEEEE (Washing Machine)', '2025-08-06', 'Completed', NULL, '2025-08-06', NULL, 'unta mo gana?????', NULL, '[\"shop\"]'),
-(7, 'OKOKOKOK Indino', 'OKI?? (Air Conditioner)', '2025-08-06', 'Pending', NULL, '2025-08-06', NULL, NULL, NULL, '[\"shop\"]'),
-(9, 'Jun Antoni Reus Indino', 'lenovo (Other)', '2025-08-15', 'Completed', 'ELJAY', '2025-08-15', '2025-08-22', 'unta mo gana', 'oke', '[\"shop\"]'),
-(10, 'Jun Antoni Reus Indino', 'acer (Other)', '2025-08-18', 'Completed', 'ELJAY', '2025-10-04', '2025-08-25', 'okay na???', 'oke', '[\"shop\"]'),
-(11, 'oke oke', 'oke na ba? (Television)', '2025-10-06', 'Pending', 'ELJAYy', '2025-10-06', '2025-10-09', NULL, NULL, '[\"shop\"]');
+(1, 'Jun Antoni Reus Indino', 'OKEEEEEEEEEE (Washing Machine)', '2025-08-06', 'Completed', NULL, '2025-08-06', NULL, 'unta mo gana?????', NULL, '[\"shop\"]');
 
 -- --------------------------------------------------------
 
@@ -276,15 +239,7 @@ CREATE TABLE `staffs` (
 --
 
 INSERT INTO `staffs` (`staff_id`, `full_name`, `username`, `email`, `password`, `role`, `status`, `date_created`, `last_login`, `reset_token`, `reset_token_expiry`) VALUES
-(14, 'adminadmin', 'admin123', 'admin@email.com', '$2y$10$zAz2tZh5z94WpJbAAseVK.F65Pp4x6TE0M1O8HZkwhn8w9.vCVLTq', 'Manager', 'Active', '2025-07-03 00:00:00', '2025-10-07 18:01:15', NULL, NULL),
-(16, 'blah okee', 'rennotoke', 'oke@email.com', '$2y$10$HrdFqD1NxZEX5YSQM8aVJOZskmbOiaLkh.Vsmq3bZm.x.Q6QDbMx6', 'Technician', 'Active', '2025-07-03 04:11:52', '2025-07-03 04:11:52', NULL, NULL),
-(17, 'Admin Active', 'adminactivee', 'admin@email.com', '$2y$10$nANVu5BnGPM0v4eTHgE3rucUDe8uKLdhskZswutDdjSouwKf/IL1K', 'Secretary', 'Inactive', '2025-07-04 00:42:27', '2025-07-04 00:42:37', NULL, NULL),
-(18, 'admin', 'renadmin', 'admin@email.com', '$2y$10$akx4372XiPsoB320taPKCeRUoCEnCW0EI4UzqHs2e8ui2M20vJNWS', 'Secretary', 'Active', '2025-07-04 12:20:52', '2025-07-04 12:20:52', NULL, NULL),
-(19, 'okokoeoeoke', 'rennotokee', 'admin@email.com', '$2y$10$dEEu92vvdh6VzkqXxKv6Y.zqExJuUU2ZqHJ7dDTs5VERd27CNVPPO', 'Technician', 'Active', '2025-07-04 12:22:47', '2025-07-04 12:22:47', NULL, NULL),
-(20, 'ok', 'oklizz', 'oke@email.com', '$2y$10$adAYFk9mDN/Df5TyPiHjpObVxuWZkFQnBm2biS46YPlwYa9Tk1YnC', 'Technician', 'Active', '2025-07-04 12:25:07', '2025-07-04 12:25:07', NULL, NULL),
-(21, 'lj', 'ljjjj', 'oke@email.com', '$2y$10$9mUAtcb2Fgnyztl2dmSzaOHJeu9W7layJZYDMBu6HhWaYAqVp4lNO', 'Secretary', 'Active', '2025-07-04 12:36:09', '2025-07-04 12:36:09', NULL, NULL),
-(22, 'blah blah oke', 'okegana', 'oke@email.com', '$2y$10$Y9x2Vlxwypr8112zUVLzVu9Cy7LyA5X1a3954IsXx9iY5UfXDiiii', 'Technician', 'Inactive', '2025-07-04 22:26:31', '2025-07-04 22:26:31', NULL, NULL),
-(23, 'era dumangcas', 'era123', 'eradumangcas7@gmail.com', '$2y$10$cp8ih5L.eI.psQieboJCh.HMuwTz3t9J6KU0LOBLq.dlzNH8efSOu', 'Manager', 'Active', '2025-10-02 23:35:41', '2025-10-03 00:03:10', NULL, NULL),
+(1, 'adminadmin', 'admin123', 'admin@email.com', '$2y$10$zAz2tZh5z94WpJbAAseVK.F65Pp4x6TE0M1O8HZkwhn8w9.vCVLTq', 'Manager', 'Active', '2025-07-03 00:00:00', '2025-10-07 18:01:15', NULL, NULL),
 (24, 'Ren Admin', 'ren', 'renindino02@gmail.com', '$2y$10$3Uw1mlyF/KieGw/Nxka1Cezdcif5l0VeAcw2Hr/rUXItf7wwEhqau', 'Manager', 'Active', '2025-10-03 00:57:16', '2025-10-03 17:04:04', NULL, NULL),
 (25, 'Staff User', 'staff', 'Staff@example.com', '$2y$10$/8phNgC6N2VhMqfIlpdf7.z5MWOd4VdEjpS29WUsbrAOEFDF.qdSW', 'Secretary', 'Active', '2025-10-03 17:07:10', '2025-10-05 18:46:36', NULL, NULL);
 
@@ -310,8 +265,7 @@ CREATE TABLE `transactions` (
 --
 
 INSERT INTO `transactions` (`transaction_id`, `report_id`, `parts_total`, `labor_total`, `total_amount`, `payment_status`, `payment_date`, `received_by`) VALUES
-(1, 10, NULL, NULL, '1581.00', 'Pending', NULL, '14'),
-(2, 9, NULL, NULL, '2180.00', 'Pending', NULL, NULL);
+(1, 10, NULL, NULL, '1581.00', 'Pending', NULL, '14');
 
 -- --------------------------------------------------------
 

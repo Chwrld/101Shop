@@ -23,8 +23,12 @@ RUN docker-php-ext-install pdo pdo_mysql mysqli mbstring exif pcntl bcmath gd
 # Enable Apache mod_rewrite
 RUN a2enmod rewrite
 
-# Copy all project files to container
+# Install Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Copy project files and install PHP dependencies
 COPY . /var/www/html/
+RUN composer install --no-dev --optimize-autoloader --no-interaction --working-dir=/var/www/html || true
 
 # Set proper permissions
 RUN chown -R www-data:www-data /var/www/html \

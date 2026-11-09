@@ -42,235 +42,146 @@ if (!empty($data['service_types'])) {
 
 $parts = $data['Parts'] ?? $data['parts'] ?? [];
 
+// D.R. format helpers
+$drDate = $data['date_delivered'] ?? $data['date_pulled_out'] ?? $data['date_in'] ?? '';
+if (!empty($drDate) && $drDate !== '0000-00-00') {
+    $ts = strtotime($drDate);
+    $drDate = $ts ? date('m/d/Y', $ts) : $drDate;
+} else {
+    $drDate = '';
+}
+$modelSerial = trim(($data['appliance_model'] ?? '') . (($data['appliance_model'] ?? '') && ($data['appliance_serial'] ?? '') ? ' / ' : '') . ($data['appliance_serial'] ?? ''));
+if ($modelSerial === '' && !empty($data['appliance_name'])) $modelSerial = $data['appliance_name'];
+$remarksText = trim(($data['remarks'] ?? '') !== '' ? $data['remarks'] : ($data['findings'] ?? ''));
+$preparedBy = $data['receptionist'] ?? $data['staff_name'] ?? '';
+$technician = $data['technician'] ?? '';
+$receivedBy = $data['released_by'] ?? '';
+$labor = number_format((float)($data['labor'] ?? 0), 2);
+$others = number_format((float)($data['pullout_delivery'] ?? 0), 2);
+$partsAmt = number_format((float)($data['parts_total_charge'] ?? 0), 2);
+$totalAmt = number_format((float)($data['total_amount'] ?? 0), 2);
+$address = $data['customer_address'] ?? '';
+$contact = $data['customer_contact'] ?? '';
+$to = $data['customer_name'] ?? '';
+
+// Build item rows (up to 5) for the D.R. table; first row carries appliance info
+$itemRows = [];
+$itemRows[] = ['qty' => '1', 'model' => $modelSerial, 'remarks' => $remarksText];
+if (!empty($parts) && is_array($parts)) {
+    foreach ($parts as $p) {
+        $pname = $p['part_name'] ?? '';
+        $pqty = $p['quantity'] ?? '';
+        if ($pname === '' && $pqty === '') continue;
+        $itemRows[] = ['qty' => (string)$pqty, 'model' => $pname, 'remarks' => ''];
+    }
+}
+$minRows = 5;
+for ($i = count($itemRows); $i < $minRows; $i++) $itemRows[] = ['qty' => '', 'model' => '', 'remarks' => ''];
+
+function drCopy($copyTitle, $to, $address, $contact, $drDate, $itemRows, $partsAmt, $labor, $others, $totalAmt, $preparedBy, $technician, $receivedBy) {
+    ob_start();
+    ?>
+    <div class="dr-copy">
+      <table class="dr-head">
+        <tr>
+          <td class="dr-shop">101 REPAIR SHOP<?php if ($copyTitle): ?><div class="dr-sub"><?php echo $copyTitle; ?></div><?php endif; ?></td>
+          <td class="dr-title">DELIVERY / PULL OUT RECEIPT</td>
+        </tr>
+      </table>
+      <table class="dr-info">
+        <tr><td class="dr-to">TO: <span class="dr-val"><?php echo esc($to); ?></span></td><td class="dr-date">DATE: <span class="dr-val"><?php echo esc($drDate); ?></span></td></tr>
+        <tr><td colspan="2">ADDRESS: <span class="dr-val"><?php echo esc($address); ?></span></td></tr>
+        <tr><td colspan="2">CONTACT NO: <span class="dr-val"><?php echo esc($contact); ?></span></td></tr>
+      </table>
+      <div class="dr-wrty"><span class="box"></span> UNDER WRTY &nbsp;&nbsp;&nbsp; <span class="box"></span> OUT WRTY</div>
+      <table class="dr-items">
+        <colgroup><col style="width:8%"><col style="width:34%"><col style="width:28%"><col style="width:30%"></colgroup>
+        <tr>
+          <th>QTY</th><th>MODEL / SERIAL NO.</th><th>REMARKS</th><th>FOR IN-HOUSE REPAIR</th>
+        </tr>
+        <?php foreach ($itemRows as $idx => $r): ?>
+        <tr>
+          <td class="c"><?php echo esc($r['qty']); ?></td>
+          <td><?php echo esc($r['model']); ?></td>
+          <td><?php echo $idx === 0 ? esc($r['remarks']) : esc($r['remarks']); ?></td>
+          <?php if ($idx === 0): ?>
+            <td class="dr-amt-cell" rowspan="<?php echo count($itemRows); ?>">
+              <div class="dr-amt"><span>PARTS</span><span><?php echo $partsAmt; ?></span></div>
+              <div class="dr-amt"><span>LABOR</span><span><?php echo $labor; ?></span></div>
+              <div class="dr-amt"><span>OTHERS</span><span><?php echo $others; ?></span></div>
+              <div class="dr-amt dr-total"><span>TOTAL:</span><span><?php echo $totalAmt; ?></span></div>
+            </td>
+          <?php endif; ?>
+        </tr>
+        <?php endforeach; ?>
+      </table>
+      <table class="dr-sign">
+        <tr>
+          <td>PREPARED BY: <span class="dr-val"><?php echo esc($preparedBy); ?></span></td>
+          <td class="r">RECEIVED BY: <span class="dr-val"><?php echo esc($receivedBy); ?></span></td>
+        </tr>
+        <tr><td colspan="2">TECHNICIAN: <span class="dr-val"><?php echo esc($technician); ?></span></td></tr>
+      </table>
+    </div>
+    <?php
+    return ob_get_clean();
+}
 ?>
 <!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Service Report Print - #<?php echo esc($data['report_id']); ?></title>
-<link rel="stylesheet" href="../css/bootstrap.min.css">
-<link rel="stylesheet" href="../css/custom.css">
+<title>D.R. - #<?php echo esc($data['report_id']); ?></title>
 <style>
-@media print {
-    body * { visibility: hidden; }
-    .print-section, .print-section * { visibility: visible; }
-    .print-section { position: absolute; left: 0; top: 0; width: 100%; }
-    /* Remove any background colors or shadows when printing so text is fully visible */
-    .print-section, .print-section * {
-        background: transparent !important;
-        background-color: transparent !important;
-        box-shadow: none !important;
-    }
-}
-
-.print-section { padding: 24px; background: #fff; }
-.header-row { margin-bottom: 18px; }
-.section { margin-top: 10px; }
-.table th, .table td { vertical-align: middle; }
+  * { box-sizing: border-box; }
+  body { font-family: Arial, sans-serif; color: #000; margin: 0; padding: 12px; font-size: 12px; }
+  .no-print { margin-bottom: 10px; }
+  .print-section { max-width: 800px; margin: 0 auto; }
+  .dr-copy { padding: 6px 4px; }
+  .dr-head { width: 100%; border-collapse: collapse; margin-bottom: 2px; }
+  .dr-shop { font-weight: bold; font-size: 16px; width: 45%; vertical-align: top; }
+  .dr-sub { font-size: 9px; font-weight: normal; }
+  .dr-title { font-weight: bold; font-size: 18px; text-align: left; vertical-align: top; padding-left: 10px; }
+  .dr-info { width: 100%; border-collapse: collapse; margin-bottom: 2px; }
+  .dr-info td { padding: 1px 0; }
+  .dr-to { width: 60%; }
+  .dr-date { width: 40%; }
+  .dr-val { font-weight: normal; }
+  .dr-wrty { margin: 2px 0 4px 0; }
+  .box { display: inline-block; width: 12px; height: 12px; border: 1px solid #000; vertical-align: middle; margin-right: 2px; }
+  .dr-items { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  .dr-items th, .dr-items td { border: 1px solid #000; padding: 3px 4px; vertical-align: top; font-size: 11px; }
+  .dr-items th { text-align: center; font-weight: bold; }
+  .dr-items td.c { text-align: center; }
+  .dr-amt-cell { vertical-align: top; }
+  .dr-amt { display: flex; justify-content: space-between; padding: 2px 2px; font-size: 11px; }
+  .dr-total { font-weight: bold; border-top: 1px solid #000; margin-top: 4px; padding-top: 3px; }
+  .dr-sign { width: 100%; border-collapse: collapse; margin-top: 6px; }
+  .dr-sign td { padding: 2px 0; }
+  .dr-sign .r { text-align: right; }
+  .dr-cut { border: none; border-top: 1px dashed #000; margin: 10px 0; }
+  @media print {
+    body { padding: 0; }
+    .no-print { display: none !important; }
+    .print-section { max-width: 100%; }
+    .dr-cut { margin: 8px 0; }
+  }
 </style>
 </head>
 <body>
-<div class="container print-section">
-    <div class="row header-row">
-        <div class="col-md-8">
-            <h3 class="mb-0">Service Report</h3>
-            <div>Report ID: <strong>#<?php echo esc($data['report_id']); ?></strong></div>
-            <div>Date In: <strong><?php echo esc($data['date_in']); ?></strong></div>
-        </div>
-        <div class="col-md-4 text-right">
-            <button id="print-btn" class="btn btn-primary mb-2">Print</button>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-md-6">
-            <h5>Customer</h5>
-            <div><?php echo esc($data['customer_name']); ?></div>
-            <div>Appliance: <?php echo esc($data['appliance_name']); ?></div>
-        </div>
-        <div class="col-md-6">
-            <h5>Status</h5>
-            <div><?php echo esc($data['status']); ?></div>
-            <div>Dealer: <?php echo esc($data['dealer']); ?></div>
-        </div>
-    </div>
-
-    <div class="row section">
-        <div class="col-md-12">
-            <h5>Service Types</h5>
-            <div><?php echo esc(implode(', ', $serviceTypes)); ?></div>
-        </div>
-    </div>
-
-    <div class="row section">
-        <div class="col-md-12">
-            <h5>Findings / Remarks</h5>
-            <div><?php echo esc($data['findings']); ?></div>
-            <div class="text-muted small mt-1"><?php echo esc($data['remarks']); ?></div>
-        </div>
-    </div>
-
-    <div class="row section">
-        <div class="col-md-12">
-            <h5>Parts Used</h5>
-            <?php if (!empty($parts)) : ?>
-                <table class="table table-sm table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Part Name</th>
-                            <th>Quantity</th>
-                            <th>Unit Price</th>
-                            <th>Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($parts as $p) : ?>
-                            <tr>
-                                <td><?php echo esc($p['part_name']); ?></td>
-                                <td><?php echo esc($p['quantity']); ?></td>
-                                <td><?php echo number_format((float)($p['unit_price'] ?? 0), 2); ?></td>
-                                <td><?php echo number_format(((float)($p['unit_price'] ?? 0) * (int)($p['quantity'] ?? 0)), 2); ?></td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            <?php else: ?>
-                <div>No parts used</div>
-            <?php endif; ?>
-        </div>
-    </div>
-
-    <div class="row section">
-        <div class="col-md-6">
-            <h5>Charges</h5>
-            <div>Labor: <strong>₱ <?php echo number_format((float)($data['labor'] ?? 0), 2);?></strong></div>
-            <div>Pull-out Delivery: <strong>₱ <?php echo number_format((float)($data['pullout_delivery'] ?? 0), 2);?></strong></div>
-            <div>Parts Charge: <strong>₱ <?php echo number_format((float)($data['parts_total_charge'] ?? 0), 2);?></strong></div>
-            <div>Total: <strong>₱ <?php echo number_format((float)($data['total_amount'] ?? 0), 2);?></strong></div>
-        </div>
-        <div class="col-md-6">
-            <h5>Staff & Dates</h5>
-            <div>Repaired: <?php echo esc($data['date_repaired'] ?? ''); ?></div>
-            <div>Delivered: <?php echo esc($data['date_delivered'] ?? ''); ?></div>
-            <div class="mt-2">Technician: <?php echo esc($data['technician'] ?? ''); ?></div>
-            <div>Manager: <?php echo esc($data['manager'] ?? ''); ?></div>
-            <div>Receptionist: <?php echo esc($data['receptionist'] ?? ''); ?></div>
-        </div>
-    </div>
-
-    <div class="row mt-4">
-        <div class="col-md-6 text-center">
-            <div style="height:80px; border-bottom:1px solid #ccc; margin-bottom:6px;"></div>
-            <div class="small">Technician</div>
-        </div>
-        <div class="col-md-6 text-center">
-            <div style="height:80px; border-bottom:1px solid #ccc; margin-bottom:6px;"></div>
-            <div class="small">Manager / Released By</div>
-        </div>
-    </div>
-
-</div>
+  <div class="print-section">
+    <div class="no-print"><button id="print-btn" type="button" style="padding:6px 14px;cursor:pointer;">Print</button></div>
+    <?php echo drCopy('', $to, $address, $contact, $drDate, $itemRows, $partsAmt, $labor, $others, $totalAmt, $preparedBy, $technician, $receivedBy); ?>
+    <hr class="dr-cut">
+    <?php echo drCopy('AUTHORIZED SERVICE CENTER', $to, $address, $contact, $drDate, $itemRows, $partsAmt, $labor, $others, $totalAmt, $preparedBy, $technician, $receivedBy); ?>
+  </div>
 
 <script>
-    (function() {
-        const containerSelector = '.print-section';
-
-        function applyPrintStyles() {
-            const container = document.querySelector(containerSelector);
-            if (!container) return;
-            const nodes = container.querySelectorAll('*');
-            nodes.forEach((el) => {
-                // Save previous inline style so we can restore later
-                try {
-                    if (el.hasAttribute('style')) {
-                        el.setAttribute('data-prev-style', el.getAttribute('style'));
-                    } else {
-                        el.setAttribute('data-prev-style', '');
-                    }
-                } catch (e) {
-                    // ignore
-                }
-
-                // Force black text and disable visual filters/shadows for printing
-                el.style.setProperty('color', '#000000', 'important');
-                el.style.setProperty('-webkit-text-fill-color', '#000000', 'important');
-                el.style.setProperty('-webkit-print-color-adjust', 'exact', 'important');
-                el.style.setProperty('print-color-adjust', 'exact', 'important');
-                el.style.setProperty('filter', 'none', 'important');
-                el.style.setProperty('text-shadow', 'none', 'important');
-                // Remove any background so it doesn't block text when printing
-                el.style.setProperty('background', 'transparent', 'important');
-                el.style.setProperty('background-color', 'transparent', 'important');
-            });
-            // Also ensure container itself
-            try {
-                const c = document.querySelector(containerSelector);
-                if (c) {
-                    if (c.hasAttribute('style')) c.setAttribute('data-prev-style', c.getAttribute('style'));
-                    else c.setAttribute('data-prev-style', '');
-                    c.style.setProperty('color', '#000000', 'important');
-                    c.style.setProperty('-webkit-text-fill-color', '#000000', 'important');
-                    c.style.setProperty('-webkit-print-color-adjust', 'exact', 'important');
-                    c.style.setProperty('print-color-adjust', 'exact', 'important');
-                    c.style.setProperty('background', 'transparent', 'important');
-                }
-            } catch (e){}
-        }
-
-        function removePrintStyles() {
-            const container = document.querySelector(containerSelector);
-            if (!container) return;
-            const nodes = container.querySelectorAll('*');
-            nodes.forEach((el) => {
-                try {
-                    const prev = el.getAttribute('data-prev-style');
-                    if (prev === null || typeof prev === 'undefined') {
-                        el.removeAttribute('style');
-                    } else if (prev === '') {
-                        el.removeAttribute('style');
-                    } else {
-                        el.setAttribute('style', prev);
-                    }
-                    el.removeAttribute('data-prev-style');
-                } catch (e) {
-                    // ignore
-                }
-            });
-            try {
-                const c = document.querySelector(containerSelector);
-                if (c) {
-                    const prev = c.getAttribute('data-prev-style');
-                    if (prev === null || typeof prev === 'undefined' || prev === '') c.removeAttribute('style');
-                    else c.setAttribute('style', prev);
-                    c.removeAttribute('data-prev-style');
-                }
-            } catch (e){}
-        }
-
-        // Attach handlers for before/after print where supported
-        if (window.matchMedia) {
-            window.addEventListener('beforeprint', applyPrintStyles);
-            window.addEventListener('afterprint', removePrintStyles);
-        }
-
-        // Button handler (covers the button click path)
-        const printBtn = document.getElementById('print-btn');
-        if (printBtn) {
-            printBtn.addEventListener('click', function (e) {
-                applyPrintStyles();
-                // Give the browser a tiny moment to apply styles before opening print dialog
-                setTimeout(function() {
-                    try {
-                        window.print();
-                    } finally {
-                        // Ensure styles are removed after a reasonable interval
-                        setTimeout(removePrintStyles, 1200);
-                    }
-                }, 60);
-            });
-        }
-    })();
+(function() {
+  var btn = document.getElementById('print-btn');
+  if (btn) btn.addEventListener('click', function(){ window.print(); });
+})();
 </script>
 </body>
 </html>

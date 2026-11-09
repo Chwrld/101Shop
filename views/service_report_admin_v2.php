@@ -3740,139 +3740,80 @@ $userSession = $auth->requireAuth('admin');
                     serviceTypes = report.service_types;
                 }
 
-                // Build parts list with table
-                let partsHtml = '<table style="width: 100%; border-collapse: collapse; font-size: 12px; color: #000;"><tr style="border-bottom: 2px solid #000;"><th style="text-align: left; padding: 6px; color: #000; font-weight: bold;">Part Name</th><th style="text-align: center; padding: 6px; color: #000; font-weight: bold;">Qty</th></tr>';
-                if (report.parts && Array.isArray(report.parts)) {
-                    report.parts.forEach(part => {
-                        partsHtml += `<tr style="border-bottom: 1px solid #000;"><td style="padding: 6px; color: #000;">${part.part_name || ''}</td><td style="text-align: center; padding: 6px; color: #000;">${part.quantity || 0}</td></tr>`;
-                    });
-                } else {
-                    partsHtml += '<tr><td colspan="2" style="padding: 6px; color: #000;"></td></tr>';
-                }
-                partsHtml += '</table>';
+                // D.R. format (based on D.R.xlsx)
+                const escH = (v) => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                const drDateRaw = report.date_delivered || report.date_pulled_out || report.date_in || '';
+                const drDate = drDateRaw ? new Date(drDateRaw).toLocaleDateString() : '';
+                const model = report.appliance_model || '';
+                const serial = report.appliance_serial || '';
+                let modelSerial = [model, serial].filter(Boolean).join(' / ');
+                if (!modelSerial) modelSerial = report.appliance_name || '';
+                const remarksText = (report.remarks && String(report.remarks).trim()) ? report.remarks : (report.findings || '');
+                const preparedBy = report.receptionist || report.staff_name || '';
+                const technician = report.technician || '';
+                const receivedBy = report.released_by || '';
+                const laborAmt = parseFloat(report.labor || 0).toFixed(2);
+                const othersAmt = parseFloat(report.pullout_delivery || 0).toFixed(2);
+                const partsAmt = parseFloat(report.parts_total_charge || 0).toFixed(2);
+                const totalAmt = parseFloat(report.total_amount || 0).toFixed(2);
+                const toName = report.customer_name || '';
+                const address = report.customer_address || '';
+                const contact = report.customer_contact || '';
 
-                // Build charges breakdown with table
-                let chargesHtml = '<table style="width: 100%; border-collapse: collapse; font-size: 12px; color: #000;"><tr style="border-bottom: 2px solid #000;"><th style="text-align: left; padding: 6px; color: #000; font-weight: bold;">Description</th><th style="text-align: right; padding: 6px; color: #000; font-weight: bold;">Amount</th></tr>';
-                chargesHtml += `<tr style="border-bottom: 1px solid #000;"><td style="padding: 6px; color: #000;">Labor</td><td style="text-align: right; padding: 6px; color: #000;">₱${parseFloat(report.labor || 0).toFixed(2)}</td></tr>`;
-                chargesHtml += `<tr style="border-bottom: 1px solid #000;"><td style="padding: 6px; color: #000;">Pull-Out/Delivery</td><td style="text-align: right; padding: 6px; color: #000;">₱${parseFloat(report.pullout_delivery || 0).toFixed(2)}</td></tr>`;
-                chargesHtml += `<tr style="border-bottom: 1px solid #000;"><td style="padding: 6px; color: #000;">Parts Charge</td><td style="text-align: right; padding: 6px; color: #000;">₱${parseFloat(report.parts_total_charge || 0).toFixed(2)}</td></tr>`;
-                chargesHtml += '</table>';
+                let itemRows = [{qty:'1', model:modelSerial, remarks:remarksText}];
+                if (report.parts && Array.isArray(report.parts)) {
+                    report.parts.forEach(p => {
+                        if (p && (p.part_name || p.quantity)) itemRows.push({qty: p.quantity ?? '', model: p.part_name || '', remarks: ''});
+                    });
+                }
+                while (itemRows.length < 5) itemRows.push({qty:'', model:'', remarks:''});
+
+                const drCopy = (copyTitle) => {
+                    const rowsHtml = itemRows.map((r, idx) => {
+                        const amtCell = idx === 0 ? `<td rowspan="${itemRows.length}" style="border:1px solid #000;padding:3px 4px;vertical-align:top;font-size:11px;">
+                            <div style="display:flex;justify-content:space-between;padding:2px 0;"><span>PARTS</span><span>${partsAmt}</span></div>
+                            <div style="display:flex;justify-content:space-between;padding:2px 0;"><span>LABOR</span><span>${laborAmt}</span></div>
+                            <div style="display:flex;justify-content:space-between;padding:2px 0;"><span>OTHERS</span><span>${othersAmt}</span></div>
+                            <div style="display:flex;justify-content:space-between;padding:3px 0 0 0;margin-top:4px;border-top:1px solid #000;font-weight:bold;"><span>TOTAL:</span><span>${totalAmt}</span></div>
+                          </td>` : '';
+                        return `<tr>
+                          <td style="border:1px solid #000;padding:3px 4px;text-align:center;font-size:11px;">${escH(r.qty)}</td>
+                          <td style="border:1px solid #000;padding:3px 4px;font-size:11px;">${escH(r.model)}</td>
+                          <td style="border:1px solid #000;padding:3px 4px;font-size:11px;">${idx===0?escH(r.remarks):''}</td>
+                          ${amtCell}
+                        </tr>`;
+                    }).join('');
+                    return `<div style="padding:6px 4px;font-family:Arial,sans-serif;color:#000;font-size:12px;">
+                      <table style="width:100%;border-collapse:collapse;margin-bottom:2px;"><tr>
+                        <td style="font-weight:bold;font-size:16px;width:45%;vertical-align:top;">101 REPAIR SHOP${copyTitle?`<div style="font-size:9px;font-weight:normal;">${escH(copyTitle)}</div>`:''}</td>
+                        <td style="font-weight:bold;font-size:18px;vertical-align:top;padding-left:10px;">DELIVERY / PULL OUT RECEIPT</td>
+                      </tr></table>
+                      <table style="width:100%;border-collapse:collapse;margin-bottom:2px;">
+                        <tr><td style="width:60%;padding:1px 0;">TO: ${escH(toName)}</td><td style="width:40%;padding:1px 0;">DATE: ${escH(drDate)}</td></tr>
+                        <tr><td colspan="2" style="padding:1px 0;">ADDRESS: ${escH(address)}</td></tr>
+                        <tr><td colspan="2" style="padding:1px 0;">CONTACT NO: ${escH(contact)}</td></tr>
+                      </table>
+                      <div style="margin:2px 0 4px 0;"><span style="display:inline-block;width:12px;height:12px;border:1px solid #000;vertical-align:middle;margin-right:2px;"></span> UNDER WRTY &nbsp;&nbsp;&nbsp; <span style="display:inline-block;width:12px;height:12px;border:1px solid #000;vertical-align:middle;margin-right:2px;"></span> OUT WRTY</div>
+                      <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
+                        <colgroup><col style="width:8%"><col style="width:34%"><col style="width:28%"><col style="width:30%"></colgroup>
+                        <tr><th style="border:1px solid #000;padding:3px 4px;text-align:center;font-size:11px;">QTY</th><th style="border:1px solid #000;padding:3px 4px;text-align:center;font-size:11px;">MODEL / SERIAL NO.</th><th style="border:1px solid #000;padding:3px 4px;text-align:center;font-size:11px;">REMARKS</th><th style="border:1px solid #000;padding:3px 4px;text-align:center;font-size:11px;">FOR IN-HOUSE REPAIR</th></tr>
+                        ${rowsHtml}
+                      </table>
+                      <table style="width:100%;border-collapse:collapse;margin-top:6px;">
+                        <tr><td style="padding:2px 0;">PREPARED BY: ${escH(preparedBy)}</td><td style="padding:2px 0;text-align:right;">RECEIVED BY: ${escH(receivedBy)}</td></tr>
+                        <tr><td colspan="2" style="padding:2px 0;">TECHNICIAN: ${escH(technician)}</td></tr>
+                      </table>
+                    </div>`;
+                };
 
                 const printContentHtml = `
-                    <div style="padding: 25px; font-size: 13px; line-height: 1.8; font-family: Arial, sans-serif; color: #000;">
-                        <div style="text-align: center; margin-bottom: 20px; border-bottom: 3px solid #000; padding-bottom: 10px;">
-                            <h2 style="margin: 0 0 8px 0; font-size: 24px; font-weight: bold; color: #000;">SERVICE REPAIR REPORT</h2>
-                            <p style="margin: 0; font-size: 12px; color: #000; font-weight: 600;">Service Report ID: #${report.report_id}</p>
-                        </div>
-                        
-                        <!-- First Row: Info -->
-                        <div style="margin-bottom: 15px; display: table; width: 100%; border-collapse: collapse;">
-                            <div style="display: table-cell; width: 25%; padding: 8px 10px; border: 2px solid #000; background: #ffffff; font-weight: bold; color: #000;">
-                                <strong style="font-size: 13px; color: #000;">Date In:</strong><br><span style="font-size: 12px; color: #000;">${dateIn}</span>
-                            </div>
-                            <div style="display: table-cell; width: 25%; padding: 8px 10px; border: 2px solid #000; background: #ffffff; font-weight: bold; color: #000;">
-                                <strong style="font-size: 13px; color: #000;">Status:</strong><br><span style="font-size: 12px; color: #000;">${report.status || ''}</span>
-                            </div>
-                            <div style="display: table-cell; width: 25%; padding: 8px 10px; border: 2px solid #000; background: #ffffff; font-weight: bold; color: #000;">
-                                <strong style="font-size: 13px; color: #000;">Dealer:</strong><br><span style="font-size: 12px; color: #000;">${report.dealer || ''}</span>
-                            </div>
-                            <div style="display: table-cell; width: 25%; padding: 8px 10px; border: 2px solid #000; background: #ffffff; font-weight: bold; color: #000;">
-                                <strong style="font-size: 13px; color: #000;">Staff:</strong><br><span style="font-size: 12px; color: #000;">${report.staff_name || ''}</span>
-                            </div>
-                        </div>
-                        
-                        <!-- Customer & Appliance -->
-                        <div style="margin-bottom: 15px;">
-                            <h4 style="margin: 0 0 8px 0; font-size: 13px; font-weight: bold; border-bottom: 2px solid #000; padding-bottom: 5px; color: #000;">CUSTOMER INFORMATION</h4>
-                            <div style="display: table; width: 100%; border-collapse: collapse;">
-                                <div style="display: table-cell; width: 50%; padding: 8px 10px; border: 1px solid #000; color: #000;">
-                                    <strong style="font-size: 12px; color: #000;">Name:</strong> <span style="font-size: 12px; color: #000;">${report.customer_name || ''}</span><br>
-                                    <strong style="font-size: 12px; color: #000;">Contact:</strong> <span style="font-size: 12px; color: #000;">${report.customer_contact || ''}</span>
-                                </div>
-                                <div style="display: table-cell; width: 50%; padding: 8px 10px; border: 1px solid #000; color: #000;">
-                                    <strong style="font-size: 12px; color: #000;">Appliance:</strong> <span style="font-size: 12px; color: #000;">${report.appliance_name || ''}</span><br>
-                                    <strong style="font-size: 12px; color: #000;">Model:</strong> <span style="font-size: 12px; color: #000;">${report.appliance_model || ''}</span><br>
-                                    <strong style="font-size: 12px; color: #000;">Serial:</strong> <span style="font-size: 12px; color: #000;">${report.appliance_serial || ''}</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Service Details -->
-                        <div style="margin-bottom: 15px;">
-                            <h4 style="margin: 0 0 8px 0; font-size: 13px; font-weight: bold; border-bottom: 2px solid #000; padding-bottom: 5px; color: #000;">SERVICE INFORMATION</h4>
-                            <div style="display: table; width: 100%; border-collapse: collapse;">
-                                <div style="display: table-cell; width: 50%; padding: 8px 10px; border: 1px solid #000; color: #000;">
-                                    <strong style="font-size: 12px; color: #000;">Service Type:</strong> <span style="font-size: 12px; color: #000;">${serviceTypes}</span><br>
-                                    <strong style="font-size: 12px; color: #000;">Findings:</strong> <span style="font-size: 12px; color: #000;">${report.findings || ''}</span>
-                                </div>
-                                <div style="display: table-cell; width: 50%; padding: 8px 10px; border: 1px solid #000; color: #000;">
-                                    <strong style="font-size: 12px; color: #000;">Date of Problem:</strong> <span style="font-size: 12px; color: #000;">${dop}</span><br>
-                                    <strong style="font-size: 12px; color: #000;">Date Pulled Out:</strong> <span style="font-size: 12px; color: #000;">${datePulledOut}</span><br>
-                                    <strong style="font-size: 12px; color: #000;">Date Repaired:</strong> <span style="font-size: 12px; color: #000;">${dateRepaired}</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Complaint -->
-                        <div style="margin-bottom: 15px;">
-                            <h4 style="margin: 0 0 8px 0; font-size: 13px; font-weight: bold; border-bottom: 2px solid #000; padding-bottom: 5px; color: #000;">COMPLAINT</h4>
-                            <div style="padding: 10px; border: 1px solid #000; min-height: 40px; background: #ffffff; font-size: 12px; color: #000;">
-                                ${report.complaint || ''}
-                            </div>
-                        </div>
-                        
-                        <!-- Parts Used -->
-                        <div style="margin-bottom: 15px;">
-                            <h4 style="margin: 0 0 8px 0; font-size: 13px; font-weight: bold; border-bottom: 2px solid #000; padding-bottom: 5px; color: #000;">PARTS USED</h4>
-                            <div style="padding: 10px; border: 1px solid #000; background: #ffffff;">
-                                ${partsHtml}
-                            </div>
-                        </div>
-                        
-                        <!-- Charges -->
-                        <div style="margin-bottom: 15px;">
-                            <h4 style="margin: 0 0 8px 0; font-size: 13px; font-weight: bold; border-bottom: 2px solid #000; padding-bottom: 5px; color: #000;">CHARGES BREAKDOWN</h4>
-                            <div style="padding: 10px; border: 1px solid #000; background: #ffffff;">
-                                ${chargesHtml}
-                            </div>
-                        </div>
-                        
-                        <!-- Total Amount -->
-                        <div style="margin-bottom: 15px; background-color: #ffffff; padding: 15px; border: 3px solid #000; font-weight: bold; font-size: 16px; text-align: right; color: #000;">
-                            TOTAL AMOUNT: ₱${parseFloat(report.total_amount || 0).toFixed(2)}
-                        </div>
-                        
-                        <!-- Remarks -->
-                        <div style="margin-bottom: 15px;">
-                            <h4 style="margin: 0 0 8px 0; font-size: 13px; font-weight: bold; border-bottom: 2px solid #000; padding-bottom: 5px; color: #000;">REMARKS</h4>
-                            <div style="padding: 10px; border: 1px solid #000; min-height: 40px; background: #ffffff; font-size: 12px; color: #000;">
-                                ${report.remarks || 'N/A'}
-                            </div>
-                        </div>
-                        
-                        <!-- Signature Area -->
-                        <div style="margin-top: 20px; border-top: 2px solid #000; padding-top: 15px;">
-                            <div style="display: table; width: 100%; border-collapse: collapse;">
-                                <div style="display: table-cell; width: 33%; padding: 0 8px 0 0; text-align: center;">
-                                    <div style="height: 60px; border-bottom: 2px solid #000; margin-bottom: 8px;"></div>
-                                    <strong style="font-size: 12px; display: block;">Technician</strong>
-                                    <span style="font-size: 11px;">Date: _____________</span>
-                                </div>
-                                <div style="display: table-cell; width: 33%; padding: 0 8px; text-align: center;">
-                                    <div style="height: 60px; border-bottom: 2px solid #000; margin-bottom: 8px;"></div>
-                                    <strong style="font-size: 12px; display: block;">Manager</strong>
-                                    <span style="font-size: 11px;">Date: _____________</span>
-                                </div>
-                                <div style="display: table-cell; width: 33%; padding: 0 0 0 8px; text-align: center;">
-                                    <div style="height: 60px; border-bottom: 2px solid #000; margin-bottom: 8px;"></div>
-                                    <strong style="font-size: 12px; display: block;">Released By</strong>
-                                    <span style="font-size: 11px;">Date: _____________</span>
-                                </div>
-                            </div>
-                        </div>
+                    <div style="background:#fff;color:#000;font-family:Arial,sans-serif;">
+                      ${drCopy('')}
+                      <hr style="border:none;border-top:1px dashed #000;margin:10px 0;">
+                      ${drCopy('AUTHORIZED SERVICE CENTER')}
                     </div>
                 `;
-                
+
                 tempContainer.innerHTML = printContentHtml;
                 document.body.appendChild(tempContainer);
 

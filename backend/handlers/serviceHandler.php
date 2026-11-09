@@ -550,29 +550,29 @@ class ServiceHandler {
                 }
             }
 
-            // Enrich response: try to fetch customer contact if available in customers table
-            $data['customer_contact'] = null;
+            // Enrich response: try to fetch customer contact/address if available in customers table
+            $data['customer_contact'] = $data['customer_contact'] ?? null;
+            $data['customer_address'] = $data['customer_address'] ?? null;
             if (!empty($data['customer_name'])) {
                 try {
-                    $customerStmt = $this->conn->prepare("SELECT phone_no FROM customers WHERE CONCAT(TRIM(first_name), ' ', TRIM(last_name)) = ? LIMIT 1");
+                    $customerStmt = $this->conn->prepare("SELECT phone_no, address FROM customers WHERE CONCAT(TRIM(first_name), ' ', TRIM(last_name)) = ? LIMIT 1");
                     $customerStmt->bind_param('s', $data['customer_name']);
                     $customerStmt->execute();
                     $custRow = $customerStmt->get_result()->fetch_assoc();
-                    if ($custRow && !empty($custRow['phone_no'])) {
-                        $data['customer_contact'] = $custRow['phone_no'];
-                    } else {
+                    if (!$custRow) {
                         // Fallback: try a LIKE match to handle minor name variations
-                        $likeStmt = $this->conn->prepare("SELECT phone_no FROM customers WHERE CONCAT(TRIM(first_name), ' ', TRIM(last_name)) LIKE ? LIMIT 1");
+                        $likeStmt = $this->conn->prepare("SELECT phone_no, address FROM customers WHERE CONCAT(TRIM(first_name), ' ', TRIM(last_name)) LIKE ? LIMIT 1");
                         $likeParam = '%' . $data['customer_name'] . '%';
                         $likeStmt->bind_param('s', $likeParam);
                         $likeStmt->execute();
-                        $likeRow = $likeStmt->get_result()->fetch_assoc();
-                        if ($likeRow && !empty($likeRow['phone_no'])) {
-                            $data['customer_contact'] = $likeRow['phone_no'];
-                        }
+                        $custRow = $likeStmt->get_result()->fetch_assoc();
+                    }
+                    if ($custRow) {
+                        if (!empty($custRow['phone_no'])) $data['customer_contact'] = $custRow['phone_no'];
+                        if (!empty($custRow['address'])) $data['customer_address'] = $custRow['address'];
                     }
                 } catch (Exception $e) {
-                    error_log('Failed to lookup customer contact: ' . $e->getMessage());
+                    error_log('Failed to lookup customer details: ' . $e->getMessage());
                 }
             }
 

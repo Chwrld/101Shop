@@ -146,7 +146,8 @@ class PartsHandler
                  (part_no, description, price, quantity_stock) VALUES (?, ?, ?, ?)";
 
         $stmt = $this->conn->prepare($query);
-        $stmt->bind_param('ssdi', $parts_no, $description, $price, $quantity_stock);
+        $priceVal = ($price === null || $price === '') ? null : $price;
+        $stmt->bind_param('ssdi', $parts_no, $description, $priceVal, $quantity_stock);
 
         if ($stmt->execute()) {
             $part_id = $stmt->insert_id;
@@ -174,7 +175,8 @@ class PartsHandler
                   WHERE part_id = ?";
 
         $stmt = $this->conn->prepare($query);
-        $stmt->bind_param('ssdii', $parts_no, $description, $price, $quantity_stock, $id);
+        $priceVal = ($price === null || $price === '') ? null : $price;
+        $stmt->bind_param('ssdii', $parts_no, $description, $priceVal, $quantity_stock, $id);
 
         if ($stmt->execute()) {
             // Log the activity

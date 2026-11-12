@@ -64,7 +64,7 @@ try{
 
         case 'addPart':
             $required = [
-                'parts_no', 'description', 'price', 'quantity_stock'
+                'parts_no', 'description', 'quantity_stock'
             ];
 
             foreach($required as $field) {
@@ -73,10 +73,12 @@ try{
                 }
             }
 
+            $price = isset($input['price']) && $input['price'] !== '' ? $input['price'] : null;
+
             $result = $partHandler->addParts(
                 $input['parts_no'],
                 $input['description'],
-                $input['price'],
+                $price,
                 $input['quantity_stock']
             );
 
@@ -88,7 +90,7 @@ try{
 
         case 'updatePart':
             $required = [
-                'part_id', 'parts_no', 'description', 'price', 'quantity_stock'
+                'part_id', 'parts_no', 'description', 'quantity_stock'
             ];
             foreach($required as $field) {
                 if(empty($input[$field])) {
@@ -96,11 +98,13 @@ try{
                 }
             }
 
+            $price = isset($input['price']) && $input['price'] !== '' ? $input['price'] : null;
+
             $result = $partHandler->updateParts(
                 $input['part_id'],
                 $input['parts_no'],
                 $input['description'],
-                $input['price'],
+                $price,
                 $input['quantity_stock'],
             );
 

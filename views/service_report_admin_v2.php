@@ -1803,37 +1803,61 @@ $userSession = $auth->requireAuth('admin');
                 return;
             }
 
-            // Create comment object
-            const comment = {
-                id: Date.now(),
-                text: commentText,
-                timestamp: new Date().toLocaleString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
+            // Try to save to database immediately (like staff view)
+            $.ajax({
+                url: '../backend/api/service_report_api.php',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    action: 'addProgressComment',
+                    report_id: reportId,
+                    progress_key: currentProgressKey,
+                    comment_text: commentText
                 }),
-                author: '<?php echo isset($userSession["name"]) ? htmlspecialchars($userSession["name"]) : "User"; ?>'
-            };
+                success: function(response) {
+                    if (response && response.success) {
+                        // Create comment object for display
+                        const comment = {
+                            id: response.data && response.data.id ? response.data.id : Date.now(),
+                            text: commentText,
+                            timestamp: new Date().toLocaleString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            }),
+                            author: '<?php echo isset($userSession["name"]) ? htmlspecialchars($userSession["name"]) : "User"; ?>'
+                        };
 
-            // Initialize storage if needed
-            if (!progressComments[reportId]) {
-                progressComments[reportId] = {};
-            }
-            if (!progressComments[reportId][currentProgressKey]) {
-                progressComments[reportId][currentProgressKey] = [];
-            }
+                        // Initialize storage if needed
+                        if (!progressComments[reportId]) {
+                            progressComments[reportId] = {};
+                        }
+                        if (!progressComments[reportId][currentProgressKey]) {
+                            progressComments[reportId][currentProgressKey] = [];
+                        }
 
-            // Add comment
-            progressComments[reportId][currentProgressKey].push(comment);
+                        // Add comment
+                        progressComments[reportId][currentProgressKey].push(comment);
 
-            // Update display for this progress item
-            displayProgressItemComments(reportId, currentProgressKey);
+                        // Update display for this progress item
+                        displayProgressItemComments(reportId, currentProgressKey);
 
-            // Close modal and show success message
-            $('#progressCommentModal').modal('hide');
-            showAlert('success', `Comment added to ${currentProgressTitle}!`);
+                        // Close modal and show success message
+                        $('#progressCommentModal').modal('hide');
+                        showAlert('success', `Comment added to ${currentProgressTitle}!`);
+                        // Reload from DB to ensure consistency
+                        loadProgressComments(reportId);
+                    } else {
+                        showAlert('danger', response && response.message ? response.message : 'Failed to save comment');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error saving comment:', error);
+                    showAlert('danger', 'Error saving comment. Please try again.');
+                }
+            });
         }
 
         function displayProgressItemComments(reportId, progressKey) {
@@ -1871,9 +1895,52 @@ $userSession = $auth->requireAuth('admin');
         }
 
         function loadProgressComments(reportId) {
-            // Load comments from storage (if implemented with database)
-            // For now, just display existing comments in memory
-            displayAllProgressComments();
+            if (!reportId) {
+                displayAllProgressComments();
+                return;
+            }
+            $.ajax({
+                url: '../backend/api/service_report_api.php?action=getProgressComments&report_id=' + reportId,
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if (response && response.success && response.data) {
+                        if (!progressComments[reportId]) {
+                            progressComments[reportId] = {};
+                        }
+                        response.data.forEach(function(comment) {
+                            const key = comment.progress_key;
+                            if (!progressComments[reportId][key]) {
+                                progressComments[reportId][key] = [];
+                            }
+                            // Avoid duplicates
+                            const exists = progressComments[reportId][key].find(function(c) {
+                                return c.id == comment.id || (c.text == comment.comment_text && c.timestamp == comment.created_at);
+                            });
+                            if (!exists) {
+                                progressComments[reportId][key].push({
+                                    id: comment.id,
+                                    text: comment.comment_text,
+                                    timestamp: comment.created_at ? new Date(comment.created_at).toLocaleString('en-US', {
+                                        year: 'numeric',
+                                        month: 'short',
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                    }) : new Date().toLocaleString(),
+                                    author: comment.created_by || 'User'
+                                });
+                            }
+                        });
+                        displayAllProgressComments();
+                    } else {
+                        displayAllProgressComments();
+                    }
+                },
+                error: function() {
+                    displayAllProgressComments();
+                }
+            });
         }
 
         async function initializeServiceReport() {
@@ -2289,7 +2356,40 @@ $userSession = $auth->requireAuth('admin');
                     $('#report_id').val(response.data.report_id || response.data.ReportID);
                 }
 
-                updateSubmitButton(formData.status, $('#report_id').val());
+                const currentReportIdForComments = $('#report_id').val() || reportId || (response.data?.report_id || response.data?.ReportID);
+                updateSubmitButton(formData.status, currentReportIdForComments);
+
+                // Save any pending comments after updating/creating report
+                try {
+                    if (currentReportIdForComments && progressComments[currentReportIdForComments]) {
+                        const pendingKeys = Object.keys(progressComments[currentReportIdForComments]);
+                        for (let i = 0; i < pendingKeys.length; i++) {
+                            const key = pendingKeys[i];
+                            const comments = progressComments[currentReportIdForComments][key] || [];
+                            for (let j = 0; j < comments.length; j++) {
+                                const c = comments[j];
+                                if (c.pending && c.text) {
+                                    $.ajax({
+                                        url: '../backend/api/service_report_api.php',
+                                        type: 'POST',
+                                        contentType: 'application/json',
+                                        async: false,
+                                        data: JSON.stringify({
+                                            action: 'addProgressComment',
+                                            report_id: currentReportIdForComments,
+                                            progress_key: key,
+                                            comment_text: c.text
+                                        })
+                                    });
+                                    c.pending = false;
+                                }
+                            }
+                        }
+                        loadProgressComments(currentReportIdForComments);
+                    }
+                } catch (e) {
+                    console.error('Error saving pending comments:', e);
+                }
 
                 let successMessage = reportId ? 'Report updated successfully' : 'Report created successfully';
                 showAlert('success', successMessage);

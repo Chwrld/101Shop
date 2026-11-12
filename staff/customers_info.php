@@ -180,20 +180,6 @@ $userSession = $auth->requireAuth('staff');
                                                     </div>
                                                     <div class="col-md-4">
                                                         <div class="form-group">
-                                                            <label>Category</label>
-                                                            <select name="category" class="form-control" required>
-                                                                <option value="">Select Category</option>
-                                                                <option value="Refrigerator">Refrigerator</option>
-                                                                <option value="Washing Machine">Washing Machine</option>
-                                                                <option value="Air Conditioner">Air Conditioner</option>
-                                                                <option value="Oven">Oven</option>
-                                                                <option value="Television">Television</option>
-                                                                <option value="Microwave">Microwave</option>
-                                                                <option value="Dishwasher">Dishwasher</option>
-                                                                <option value="Other">Other</option>
-                                                            </select>
-                                                        </div>
-                                                        <div class="form-group">
                                                             <label>Date In</label>
                                                             <input type="date" name="date_in" class="form-control" placeholder="mm / dd / yyyy">
                                                         </div>
@@ -636,7 +622,7 @@ $userSession = $auth->requireAuth('staff');
                     product: $('input[name="product"]').val(),
                     model_no: $('input[name="model_no"]').val(),
                     serial_no: $('input[name="serial_no"]').val(),
-                    category: $('select[name="category"]').val(),
+                    category: $('select[name="category"]').val() || $('input[name="category"]').val() || 'Other',
                     warranty_end: $('input[name="warranty_end"]').val(),
                     date_in: $('input[name="date_in"]').val(),
                     status: 'Active'

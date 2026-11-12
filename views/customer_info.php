@@ -272,21 +272,6 @@ $userSession = $auth->requireAuth('admin');
                                                     </div>
                                                     <div class="col-md-4">
                                                         <div class="form-group">
-                                                            <label>Category</label>
-                                                            <input list="categoryList" name="category" class="form-control" placeholder="Start typing to search or select" required />
-                                                            <datalist id="categoryList">
-                                                                <option value="Refrigerator"></option>
-                                                                <option value="Washing Machine"></option>
-                                                                <option value="Air Conditioner"></option>
-                                                                <option value="Oven"></option>
-                                                                <option value="Television"></option>
-                                                                <option value="Microwave"></option>
-                                                                <option value="Dishwasher"></option>
-                                                                <option value="Sound System"></option>
-                                                                <option value="Other"></option>
-                                                            </datalist>
-                                                        </div>
-                                                        <div class="form-group">
                                                             <label>Date In</label>
                                                             <input type="date" name="date_in" class="form-control" placeholder="mm / dd / yyyy">
                                                         </div>
@@ -717,7 +702,7 @@ $userSession = $auth->requireAuth('admin');
                     product: $('input[name="product"]').val(),
                     model_no: $('input[name="model_no"]').val(),
                     serial_no: $('input[name="serial_no"]').val(),
-                    category: $('[name="category"]').val(),
+                    category: $('[name="category"]').val() || 'Other',
                     warranty_end: $('input[name="warranty_end"]').val(),
                     date_in: $('input[name="date_in"]').val(),
                     status: 'Active'

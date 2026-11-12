@@ -154,7 +154,7 @@ $userSession = $auth->requireAuth('admin');
                                 </div>
                                 <div class="form-group">
                                     <label>Price</label>
-                                    <input type="number" name="price" class="form-control" step="0.01" required>
+                                    <input type="number" name="price" class="form-control" step="0.01">
                                 </div>
                                 <div class="form-group">
                                     <label>Quantity</label>
@@ -191,7 +191,7 @@ $userSession = $auth->requireAuth('admin');
                                 </div>
                                 <div class="form-group">
                                     <label>Price</label>
-                                    <input type="number" name="price" id="edit_price" class="form-control" step="0.01" required>
+                                    <input type="number" name="price" id="edit_price" class="form-control" step="0.01">
                                 </div>
                                 <div class="form-group">
                                     <label>Quantity</label>

@@ -4,6 +4,9 @@
 *.sublime-workspace
 *.sublime-project
 
+# Private Project Documents
+docs/
+
 # Dependencies
 /vendor/
 /node_modules/

@@ -1,10 +1,5 @@
 <?php
 require_once __DIR__ . '/../bootstrap.php';
-session_start();
-
-// Enable error reporting for debugging
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
 
 require __DIR__ . '/../backend/handlers/authHandler.php';
 require_once __DIR__ . '/../backend/handlers/Database.php';
@@ -977,7 +972,7 @@ try {
             
             // Fetch data based on selected trend type
             $.ajax({
-                url: '/backend/api/dashboard_api.php',
+                url: '../backend/api/dashboard_api.php',
                 method: 'GET',
                 data: { action: 'getTrendData', type: trendType },
                 dataType: 'json',

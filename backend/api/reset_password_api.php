@@ -41,9 +41,6 @@ use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
 
 header("Content-Type: application/json");
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
 
 function sendResponse($success, $data = null, $message = '', $httpCode = 200)
 {
@@ -97,10 +94,7 @@ function sendResetEmail($email, $token, $config)
 
     try {
         // Server settings
-        $mail->SMTPDebug = 2; // Enable verbose debug output
-        $mail->Debugoutput = function ($str, $level) {
-            error_log("PHPMailer Debug: $str");
-        };
+        $mail->SMTPDebug = 0;
         $mail->CharSet = 'UTF-8';
 
         try {
@@ -108,9 +102,9 @@ function sendResetEmail($email, $token, $config)
             $mail->Host = $config['smtp']['host'];
             $mail->SMTPOptions = array(
                 'ssl' => array(
-                    'verify_peer' => false,
-                    'verify_peer_name' => false,
-                    'allow_self_signed' => true
+                    'verify_peer' => true,
+                    'verify_peer_name' => true,
+                    'allow_self_signed' => false
                 )
             );
             $mail->SMTPAuth = true;
@@ -145,7 +139,7 @@ function sendResetEmail($email, $token, $config)
         return true;
     } catch (\Exception $e) {
         error_log("Mailer Error: " . $e->getMessage());
-        return ['success' => false, 'message' => $e->getMessage()];
+        return ['success' => false, 'message' => 'Failed to send reset email'];
     }
 }
 
@@ -183,7 +177,6 @@ if ($method !== 'POST') {
 try {
     error_log("Processing reset password request");
     $rawInput = file_get_contents('php://input');
-    error_log("Raw input: " . $rawInput);
 
     $input = json_decode($rawInput, true);
     if (json_last_error() !== JSON_ERROR_NONE) {
@@ -214,7 +207,7 @@ try {
         $config = loadMailConfig();
     } catch (\Exception $e) {
         error_log('Mail configuration error: ' . $e->getMessage());
-        sendResponse(false, null, $e->getMessage(), 500);
+        sendResponse(false, null, 'Mail is not configured', 500);
     }
 
     // Generate reset token

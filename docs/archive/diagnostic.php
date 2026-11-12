@@ -39,7 +39,7 @@ echo "</ul>";
 // Test database configuration loading
 echo "<h2>Database Configuration</h2>";
 try {
-    $config = include(__DIR__ . '/database/database.php');
+    $config = include(__DIR__ . '/../../database/database.php');
     echo "<ul>";
     echo "<li><strong>Host:</strong> " . htmlspecialchars($config['host']) . "</li>";
     echo "<li><strong>Username:</strong> " . htmlspecialchars($config['username']) . "</li>";
@@ -53,7 +53,7 @@ try {
 // Test database connection
 echo "<h2>Database Connection Test</h2>";
 try {
-    require_once __DIR__ . '/backend/handlers/Database.php';
+    require_once __DIR__ . '/../../backend/handlers/Database.php';
     $db = new Database();
     $conn = $db->getConnection();
     echo "<p style='color: green'>✓ Database connection successful!</p>";
@@ -73,9 +73,9 @@ try {
 // Check file permissions
 echo "<h2>File System Check</h2>";
 $dirs_to_check = [
-    'database' => __DIR__ . '/database',
-    'backend/handlers' => __DIR__ . '/backend/handlers',
-    'authentication' => __DIR__ . '/authentication',
+    'database' => __DIR__ . '/../../database',
+    'backend/handlers' => __DIR__ . '/../../backend/handlers',
+    'authentication' => __DIR__ . '/../../authentication',
 ];
 
 echo "<ul>";

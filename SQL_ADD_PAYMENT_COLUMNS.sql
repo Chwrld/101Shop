@@ -8,3 +8,7 @@ ADD COLUMN payment_method VARCHAR(50) DEFAULT 'Cash' AFTER payment_status;
 -- Add reference_number column (for GCash transactions)
 ALTER TABLE transactions 
 ADD COLUMN reference_number VARCHAR(100) DEFAULT NULL AFTER payment_method;
+
+-- Add payment_due_date column (replaces add_payment_due_column.php)
+ALTER TABLE transactions
+ADD COLUMN payment_due_date DATE NULL DEFAULT NULL AFTER payment_date;

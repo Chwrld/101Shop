@@ -2,12 +2,11 @@
 
 //Supports PDO and mysqli
 
-// Check for Render.com's DATABASE_URL format (postgresql://user:pass@host:port/dbname)
-// or MySQL format (mysql://user:pass@host:port/dbname)
+// Check for DATABASE_URL in MySQL URL format (mysql://user:pass@host:port/dbname)
 $databaseUrl = getenv('DATABASE_URL');
 
 if ($databaseUrl && (strpos($databaseUrl, 'mysql://') === 0)) {
-    // Parse MySQL URL from Render.com
+    // Parse MySQL URL
     $url = parse_url($databaseUrl);
     $config = [
         'host' => $url['host'] ?? 'localhost',
@@ -27,8 +26,10 @@ if ($databaseUrl && (strpos($databaseUrl, 'mysql://') === 0)) {
     ];
 }
 
-// Log configuration (without password) for debugging
-error_log("Database config - Host: {$config['host']}, User: {$config['username']}, DB: {$config['dbname']}");
+// Log configuration (without password) only when debugging is enabled
+if (getenv('APP_DEBUG') === '1') {
+    error_log("Database config - Host: {$config['host']}, DB: {$config['dbname']}");
+}
 
 //for PDO and mysqli
 return $config;

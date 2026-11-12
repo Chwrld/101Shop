@@ -2,9 +2,12 @@
 .gitignore
 *.md
 !README.md
+docs/
 node_modules
 vendor/phpmailer/.git
 .env
+.env.*
 .DS_Store
 Thumbs.db
 *.log
+*.sql

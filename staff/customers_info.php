@@ -1,6 +1,5 @@
 <?php
 require_once __DIR__ . '/../bootstrap.php';
-session_start();
 require __DIR__ . '/../backend/handlers/authHandler.php';
 $auth = new AuthHandler();
 $userSession = $auth->requireAuth('staff');
@@ -1047,7 +1046,7 @@ $userSession = $auth->requireAuth('staff');
 
                 $.ajax({
                     url: API_BASE_URL + '?action=deleteCustomer&id=' + customerId,
-                    type: 'GET',
+                    type: 'DELETE',
                     dataType: 'json',
                     success: function(response) {
                         if (response && response.success) {

@@ -3,10 +3,8 @@
 require __DIR__ . '/../../backend/handlers/Database.php';
 require __DIR__ . '/../../backend/handlers/staffsHandler.php';
 
+require __DIR__ . '/apiGuard.php';
 header("Content-Type: application/json");
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
 
 function sendResponse($success, $data = null, $message = '', $httpCode = 200)
 {
@@ -20,6 +18,7 @@ function sendResponse($success, $data = null, $message = '', $httpCode = 200)
     exit;
 }
 
+requireApiAuth(['admin', 'staff']);
 $database = new Database();
 $db = $database->getConnection();
 
@@ -29,6 +28,13 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 $input = json_decode(file_get_contents('php://input'), true);
 $action = $_GET['action'] ?? '';
+
+// Read actions are available to staff; account mutations stay admin-only.
+$adminOnlyActions = ['addStaff', 'updateStaff', 'deleteStaff'];
+if (in_array($action, $adminOnlyActions, true)
+    && ($_SESSION['user']['user_type'] ?? '') !== 'admin') {
+    sendResponse(false, null, 'Forbidden', 403);
+}
 
 try {
     switch ($action) {
@@ -187,6 +193,10 @@ try {
             break;
 
         case 'deleteStaff':
+            if ($method !== 'DELETE') {
+                sendResponse(false, null, 'Method not allowed', 405);
+            }
+
             $id = $_GET['id'] ?? null;
             if (!$id) {
                 sendResponse(false, null, 'Staff ID required', 400);
@@ -303,6 +313,10 @@ try {
             break;
 
         case 'deleteStaffComment':
+            if ($method !== 'DELETE') {
+                sendResponse(false, null, 'Method not allowed', 405);
+            }
+
             if (empty($_GET['id'])) {
                 sendResponse(false, null, 'Comment ID required', 400);
             }

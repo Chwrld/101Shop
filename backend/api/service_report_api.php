@@ -7,10 +7,8 @@ if (session_status() === PHP_SESSION_NONE) {
 
 require __DIR__ . '/../../backend/handlers/Database.php';
 
+require __DIR__ . '/apiGuard.php';
 header("Content-Type: application/json");
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
 
 // Prevent PHP notices/warnings from being sent to the client as HTML
 ini_set('display_errors', '0');
@@ -32,8 +30,9 @@ function sendResponse($success, $data = null, $message = '', $httpCode = 200)
 }
 
 try {
+    requireApiAuth(['admin', 'staff']);
     $db = new Database();
-    $conn = $db->connect();
+    $conn = $db->getConnection();
 
     // Check if connection is successful
     if (!$conn || $conn->connect_error) {
@@ -65,8 +64,9 @@ try {
             sendResponse(false, null, 'Unknown action: ' . $action, 400);
     }
 
-} catch (Exception $e) {
-    sendResponse(false, null, 'Exception: ' . $e->getMessage(), 500);
+} catch (Throwable $e) {
+    error_log('service_report_api: ' . $e->getMessage());
+    sendResponse(false, null, 'Server error', 500);
 }
 
 // ============ HANDLER FUNCTIONS ============
@@ -214,6 +214,10 @@ function handleGetProgressComments($conn)
 
 function handleDeleteProgressComment($conn)
 {
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'DELETE') {
+        sendResponse(false, null, 'Method not allowed', 405);
+    }
+
     $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
     if (!$id) {

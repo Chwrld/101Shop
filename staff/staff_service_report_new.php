@@ -1,6 +1,5 @@
 <?php
 require_once __DIR__ . '/../bootstrap.php';
-session_start();
 require __DIR__ . '/../backend/handlers/authHandler.php';
 require __DIR__ . '/../backend/handlers/Database.php';
 require __DIR__ . '/../backend/handlers/serviceHandler.php';
@@ -2588,9 +2587,9 @@ try {
             const reportId = $('#report_id').val();
             const action = reportId ? 'update' : 'create';
             const method = reportId ? 'PUT' : 'POST';
-            const url = reportId ? 
-                ('/backend/api/service_api.php?action=update&id=' + reportId) : 
-                '/backend/api/service_api.php?action=create';
+            const url = reportId ?
+                ('../backend/api/service_api.php?action=update&id=' + reportId) :
+                '../backend/api/service_api.php?action=create';
 
             $.ajax({
                 url: url,
@@ -3477,7 +3476,7 @@ try {
             
             $.ajax({
                 url: '../backend/api/service_report_api.php?action=deleteProgressComment&id=' + commentId,
-                type: 'GET',
+                type: 'DELETE',
                 dataType: 'json',
                 success: function(response) {
                     if (response.success) {

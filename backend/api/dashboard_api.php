@@ -1,6 +1,5 @@
 <?php
 require_once __DIR__ . '/../../bootstrap.php';
-session_start();
 require __DIR__ . '/../handlers/authHandler.php';
 require_once __DIR__ . '/../handlers/Database.php';
 require_once __DIR__ . '/../handlers/serviceHandler.php';

@@ -3,10 +3,8 @@ require __DIR__.'/../handlers/auditHandler.php';
 require __DIR__.'/../handlers/archiveHandler.php';
 require __DIR__.'/../handlers/Database.php';
 
+require __DIR__ . '/apiGuard.php';
 header("Content-Type: application/json");
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
 
 function sendResponse($success, $data = null, $message = '', $httpCode = 200) {
     http_response_code($httpCode);
@@ -20,6 +18,7 @@ function sendResponse($success, $data = null, $message = '', $httpCode = 200) {
 }
 
 // Create connection with the database
+requireApiAuth(['admin']);
 $database = new Database();
 $db = $database->getConnection();
 
@@ -54,6 +53,10 @@ try {
             break;
             
         case 'restoreRecord':
+            if ($method !== 'DELETE') {
+                sendResponse(false, null, 'Method not allowed', 405);
+            }
+
             $archive_id = isset($_GET['id']) ? intval($_GET['id']) : null;
             if (!$archive_id) {
                 sendResponse(false, null, 'Archive ID is required', 400);

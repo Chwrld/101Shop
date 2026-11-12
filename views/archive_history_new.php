@@ -1,6 +1,5 @@
 <?php
 require_once __DIR__ . '/../bootstrap.php';
-session_start();
 require __DIR__ . '/../backend/handlers/authHandler.php';
 $auth = new AuthHandler();
 $userSession = $auth->requireAuth('both'); 
@@ -1335,7 +1334,7 @@ $userSession = $auth->requireAuth('both');
 
             $.ajax({
                 url: `${API_URL}?action=restoreRecord&id=${id}`,
-                method: 'GET',
+                method: 'DELETE',
                 dataType: 'json',
                 success: function(response) {
                     if (response.success) {

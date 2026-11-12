@@ -130,6 +130,12 @@ RepairSystem/
 └── vendor/           # Composer dependencies
 ```
 
+## Deployment
+
+Deployment instructions for the current target platform are in [`docs/deploy/oracle-cloud-deployment.md`](docs/deploy/oracle-cloud-deployment.md).
+
+Docker is also supported for local development and self-hosted deployments; see [`DOCKER_DEPLOYMENT.md`](DOCKER_DEPLOYMENT.md).
+
 ## Testing the Password Reset Feature
 
 1. Click 'Forgot Password' on the login page

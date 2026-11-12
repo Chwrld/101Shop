@@ -4,13 +4,7 @@ require_once __DIR__ . '/../backend/handlers/authHandler.php';
 require_once __DIR__ . '/../backend/handlers/staffsHandler.php';
 require_once __DIR__ . '/../backend/handlers/Database.php';
 
-// Set up logging
-ini_set('log_errors', 1);
-ini_set('error_log', __DIR__ . '/auth_debug.log');
-error_log("=== AUTH DEBUG ===");
-
-// Start session and clean up old messages
-session_start();
+// Clean up old messages
 unset($_SESSION['login_error']);
 unset($_SESSION['reset_error']);
 

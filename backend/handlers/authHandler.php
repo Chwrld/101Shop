@@ -22,6 +22,7 @@ class AuthHandler {
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if ($user && password_verify($password, $user['password'])) {
+                session_regenerate_id(true);
                 error_log("Password verified for staff: " . $user['staff_id']);
                 $userType = $this->mapRoleToUserType($user['role']);
                 error_log("Role mapping: {$user['role']} => {$userType}");
@@ -43,8 +44,7 @@ class AuthHandler {
                 ]);
 
                 error_log("Session insert result: " . ($insertResult ? 'SUCCESS' : 'FAILED'));
-                error_log("Session token generated: " . $sessionToken);
-                error_log("StaffID: " . $user['staff_id']); 
+                error_log("StaffID: " . $user['staff_id']);
 
                 // check if session was actually inserted
                 $checkStmt = $this->pdo->prepare("SELECT * FROM user_sessions WHERE session_token = ?");
@@ -74,9 +74,11 @@ class AuthHandler {
                 ];
 
                 // Convenience top-level session values for templates
-                $_SESSION['username'] = $user['username'];
+                $_SESSION['user_id']   = (int) $user['staff_id'];
+                $_SESSION['username']  = $user['username'];
+                $_SESSION['name']      = $user['full_name'];
                 $_SESSION['full_name'] = $user['full_name'];
-                error_log("Session set in PHP: " . $_SESSION['user']['session_token']);
+                error_log("Session set for staff ID: " . $_SESSION['user']['user_id']);
 
                 return [
                     'success' => true,
@@ -103,7 +105,6 @@ class AuthHandler {
 
         try {
             $sessionToken = $_SESSION['user']['session_token'];
-            error_log("Validating token: " . substr($sessionToken, 0, 16) . "...");
 
             $stmt = $this->pdo->prepare("
                 SELECT us.*, s.full_name, s.role, s.status, s.username
@@ -116,8 +117,6 @@ class AuthHandler {
 
             if ($session) {
                 error_log("Session found in DB, Status: " . $session['status']);
-                error_log("Session details - ID: " . $session['session_id'] . ", staff_id: " . $session['staff_id'] . ", is_active: " . $session['is_active'] . ", expires_at: " . $session['expires_at']);
-                error_log("Staff Role: " . $session['role']);
 
                 if(strtolower($session['status']) == 'active') {
                     $userType = $this->mapRoleToUserType($session['role']);
@@ -141,6 +140,8 @@ class AuthHandler {
                         $_SESSION['username'] = $session['full_name'];
                     }
                     $_SESSION['full_name'] = $session['full_name'] ?? ($_SESSION['user']['full_name'] ?? '');
+                    $_SESSION['user_id']   = (int) ($session['staff_id'] ?? $_SESSION['user']['user_id'] ?? 0);
+                    $_SESSION['name']      = $_SESSION['full_name'];
                     error_log("Session validated successfully");
                     return $session;
                 } else {

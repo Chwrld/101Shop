@@ -4,10 +4,8 @@ require __DIR__.'/../handlers/Database.php';
 require __DIR__.'/../handlers/customersHandler.php';
 require __DIR__.'/../handlers/appliancesHandler.php';
 
+require __DIR__ . '/apiGuard.php';
 header("Content-Type: application/json");
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
 
 function sendResponse($success, $data = null, $message = '', $httpCode = 200) {
     http_response_code($httpCode);
@@ -21,6 +19,7 @@ function sendResponse($success, $data = null, $message = '', $httpCode = 200) {
 }
 
 // create connection with the database
+requireApiAuth(['admin', 'staff']);
 $database = new Database();
 $db = $database->getConnection();
 
@@ -111,7 +110,11 @@ try {
             sendResponse(true, null, 'Customer updated successfully');
             break;
 
-        case 'deleteCustomer': 
+        case 'deleteCustomer':
+            if ($method !== 'DELETE') {
+                sendResponse(false, null, 'Method not allowed', 405);
+            }
+
             $id = $_GET['id'] ?? null;
             if (!$id) {
                 sendResponse(false, null, 'Customer ID is required', 400);
@@ -228,6 +231,10 @@ try {
             break;
 
         case 'deleteAppliance':
+            if ($method !== 'DELETE') {
+                sendResponse(false, null, 'Method not allowed', 405);
+            }
+
             $id = $_GET['id'] ?? null;
             if (!$id) {
                 sendResponse(false, null, 'Appliance ID is required', 400);

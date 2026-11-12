@@ -1,5 +1,9 @@
-# Use official PHP + Apache image
-FROM php:8.2-apache
+# Use official PHP + Apache image (patched PHP2Shell branch)
+FROM php:8.4-apache
+
+# Fail the build on an unpatched PHP2Shell runtime
+RUN php -r 'exit(version_compare(PHP_VERSION, "8.4.27", "<") ? 1 : 0);' \
+    || (echo "PHP >= 8.4.27 required (PHP2Shell CVE-2026-109618/109619)" && exit 1)
 
 # Set working directory inside container
 WORKDIR /var/www/html
@@ -12,10 +16,8 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     libxml2-dev \
     zip \
-    unzip
-
-# Clear cache
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+    unzip \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
 RUN docker-php-ext-install pdo pdo_mysql mysqli mbstring exif pcntl bcmath gd
@@ -27,8 +29,16 @@ RUN a2enmod rewrite
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # Copy project files and install PHP dependencies
+# (before hardening ini: Composer may need functions we disable at runtime)
 COPY . /var/www/html/
-RUN composer install --no-dev --optimize-autoloader --no-interaction --working-dir=/var/www/html || true
+RUN composer install --no-dev --optimize-autoloader --no-interaction --working-dir=/var/www/html
+
+# PHP2Shell / general hardening (see docs/fix/php2shell-and-bugfix-plan.md §6)
+COPY docker/php-hardening.ini /usr/local/etc/php/conf.d/99-hardening.ini
+COPY docker/apache-hardening.conf /etc/apache2/conf-available/hardening.conf
+RUN a2enconf hardening \
+    && mkdir -p /var/lib/php/sessions \
+    && chown www-data:www-data /var/lib/php/sessions
 
 # Set proper permissions
 RUN chown -R www-data:www-data /var/www/html \

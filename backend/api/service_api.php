@@ -4,10 +4,8 @@ require __DIR__ . '/../../backend/handlers/Database.php';
 require __DIR__ . '/../../backend/handlers/serviceHandler.php';
 require __DIR__ . '/../../backend/handlers/partsHandler.php';
 
+require __DIR__ . '/apiGuard.php';
 header("Content-Type: application/json");
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
 
 // Prevent PHP notices/warnings from being sent to the client as HTML
 ini_set('display_errors', '0');
@@ -60,6 +58,7 @@ function safeParseDate($value) {
     }
 }
 
+requireApiAuth(['admin', 'staff']);
 $database = new Database();
 
 $db = $database->getConnection();
@@ -73,12 +72,11 @@ $method = $_SERVER['REQUEST_METHOD'];
 $rawBody = file_get_contents('php://input');
 $input = json_decode($rawBody, true);
 
-// DEBUG: Log raw input for create action only
-if ($_GET['action'] === 'create' && $method === 'POST') {
-    error_log("====== CREATE API DEBUG START ======");
-    error_log("Raw php://input body: " . $rawBody);
-    error_log("Decoded JSON: " . print_r($input, true));
-    error_log("====== CREATE API DEBUG END ======");
+// Debug logging only when explicitly enabled
+if (getenv('APP_DEBUG') === '1'
+    && ($_GET['action'] ?? '') === 'create'
+    && $method === 'POST') {
+    error_log('service_api create: ' . strlen($rawBody) . ' bytes');
 }
 
 if (($method === 'POST' || $method === 'PUT') && json_last_error() !== JSON_ERROR_NONE) {

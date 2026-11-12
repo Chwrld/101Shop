@@ -431,7 +431,7 @@ class StaffsHandler
     public function validateResetToken($token)
     {
         try {
-            error_log("Validating reset token: " . $token);
+            error_log("Validating reset token");
 
             $stmt = $this->conn->prepare("SELECT staff_id FROM " . $this->table_name . " 
                 WHERE reset_token = ? AND reset_token_expiry > NOW() AND status = 'Active'");

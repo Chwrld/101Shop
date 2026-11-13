@@ -1854,8 +1854,21 @@ $userSession = $auth->requireAuth('admin');
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error('Error saving comment:', error);
-                    showAlert('danger', 'Error saving comment. Please try again.');
+                    console.error('Error saving comment:', { status: xhr.status, error: error, response: xhr.responseText });
+                    var msg = 'Error saving comment. Please try again.';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        msg = xhr.responseJSON.message;
+                    } else if (xhr.responseText) {
+                        try {
+                            var parsed = JSON.parse(xhr.responseText);
+                            if (parsed && parsed.message) msg = parsed.message;
+                        } catch (e) {
+                            msg = 'Error saving comment: ' + xhr.status + ' ' + (error || '');
+                        }
+                    } else if (xhr.status || error) {
+                        msg = 'Error saving comment: ' + xhr.status + ' ' + (error || '');
+                    }
+                    showAlert('danger', msg);
                 }
             });
         }

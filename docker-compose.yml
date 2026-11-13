@@ -30,7 +30,7 @@ services:
       MYSQL_DATABASE: repairsystem
     volumes:
       - mysql-data:/var/lib/mysql
-      - ./database/repairsystem.sql:/docker-entrypoint-initdb.d/repairsystem.sql
+      - ./database/schema/repairsystem.sql:/docker-entrypoint-initdb.d/repairsystem.sql
     networks:
       - repair-network
 

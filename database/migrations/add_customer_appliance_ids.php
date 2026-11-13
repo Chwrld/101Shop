@@ -4,7 +4,7 @@
  * Purpose: Enable proper database synchronization between staff and admin panels
  */
 
-require_once __DIR__ . '/../database.php';
+require_once __DIR__ . '/../../app/config/database.php';
 
 try {
     // Get the database connection

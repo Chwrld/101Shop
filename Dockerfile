@@ -36,9 +36,11 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction --working-d
 # PHP2Shell / general hardening (see docs/fix/php2shell-and-bugfix-plan.md §6)
 COPY docker/php-hardening.ini /usr/local/etc/php/conf.d/99-hardening.ini
 COPY docker/apache-hardening.conf /etc/apache2/conf-available/hardening.conf
+# Only public/ is served; app/, database/ and the repo root stay outside the docroot
+COPY docker/apache-vhost.conf /etc/apache2/sites-available/000-default.conf
 RUN a2enconf hardening \
-    && mkdir -p /var/lib/php/sessions \
-    && chown www-data:www-data /var/lib/php/sessions
+    && mkdir -p /var/lib/php/sessions /var/www/html/storage/logs \
+    && chown www-data:www-data /var/lib/php/sessions /var/www/html/storage/logs
 
 # Set proper permissions
 RUN chown -R www-data:www-data /var/www/html \

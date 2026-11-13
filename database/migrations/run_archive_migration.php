@@ -4,7 +4,7 @@
  * Run this once to create the archive_records table in production
  */
 
-require __DIR__ . '/../../backend/handlers/Database.php';
+require __DIR__ . '/../../app/handlers/Database.php';
 
 header("Content-Type: application/json");
 

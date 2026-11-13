@@ -12,7 +12,7 @@ docs/
 /node_modules/
 
 # Environment and Configuration
-/config/mail.php
+/app/config/mail.php
 *.env
 .env.*
 !.env.example

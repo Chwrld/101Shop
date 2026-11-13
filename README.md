@@ -28,13 +28,13 @@ This will:
 1. Create a MySQL database named 'repairsystem'
 2. Import the main database schema:
    ```bash
-   mysql -u root repairsystem < database/repairsystem.sql
+   mysql -u root repairsystem < database/schema/repairsystem.sql
    ```
 3. Apply the password reset feature migration:
    ```bash
    mysql -u root repairsystem < database/migrations/add_reset_token_fields.sql
    ```
-4. Configure database connection in `config/database.php`:
+4. Configure database connection in `app/config/database.php`:
    ```php
    return [
        'host' => 'localhost',
@@ -57,8 +57,8 @@ This will:
 
 4. Set up mail configuration:
 
-   - Copy the example config: `cp config/mail.example.php config/mail.php`
-   - Edit `config/mail.php` with your SMTP credentials:
+   - Copy the example config: `cp app/config/mail.example.php app/config/mail.php`
+   - Edit `app/config/mail.php` with your SMTP credentials:
 
    ```php
    return [
@@ -71,7 +71,7 @@ This will:
            'from_name' => 'Repair System'
        ],
        'options' => [
-           'base_url' => 'http://localhost/RepairSystem',
+           'base_url' => 'http://localhost:8080',
            'token_expiry' => 3600,
            'reset_link_expiry' => '+1 hour'
        ]
@@ -80,7 +80,7 @@ This will:
 
    > ⚠️ IMPORTANT: Security Notes
    >
-   > - The `config/mail.php` file contains sensitive information and is excluded from git
+   > - The `app/config/mail.php` file contains sensitive information and is excluded from git
    > - Never commit your actual mail.php file
    > - Each team member should maintain their own mail.php file locally
    > - Use mail.example.php as a template for configuration
@@ -118,16 +118,32 @@ This will:
 ## Directory Structure
 
 ```
-RepairSystem/
-├── authentication/    # Authentication related files
-├── backend/          # Backend logic and handlers
-│   ├── api/          # API endpoints
-│   └── handlers/     # Business logic handlers
-├── config/           # Configuration files
-├── database/         # Database schema and migrations
-├── layout/           # Common layout files
-├── views/            # Frontend views
-└── vendor/           # Composer dependencies
+101Shop/
+├── public/                  # DocumentRoot — the only web-served directory
+│   ├── index.php            # Login
+│   ├── forgot_password.php
+│   ├── reset_password.php
+│   ├── bootstrap.php        # Shim -> app/bootstrap.php
+│   ├── authentication/      # Login / logout handlers
+│   ├── views/               # Admin pages
+│   ├── staff/               # Staff pages
+│   ├── backend/api/         # JSON API endpoints
+│   ├── css/
+│   ├── js/
+│   └── img/
+├── app/                     # Never web-served
+│   ├── bootstrap.php        # Session, headers, timezone
+│   ├── config/              # app.php, database.php, mail.php
+│   ├── handlers/            # Business logic and data access
+│   └── layout/              # Admin sidebar/navbar partials
+├── database/
+│   ├── schema/              # SQL dumps
+│   ├── migrations/
+│   └── seeders/
+├── docker/                  # Apache/PHP hardening + vhost
+├── storage/logs/            # Writable logs
+├── docs/                    # Deployment and fix plans
+└── vendor/                  # Composer dependencies
 ```
 
 ## Deployment
@@ -148,7 +164,7 @@ Docker is also supported for local development and self-hosted deployments; see 
 
 ### Email Issues
 
-- Verify SMTP credentials in `config/mail.php`
+- Verify SMTP credentials in `app/config/mail.php`
 - Check if App Password is correct
 - Ensure email address matches Gmail account
 - Check spam folder for reset emails
@@ -168,7 +184,7 @@ Docker is also supported for local development and self-hosted deployments; see 
 
 ## Security Notes
 
-- Never commit `config/mail.php` as it contains sensitive information
+- Never commit `app/config/mail.php` as it contains sensitive information
 - Always use App Passwords, never your main Gmail password
 - Keep the vendor directory in .gitignore
 - Regularly update dependencies
@@ -179,7 +195,7 @@ Docker is also supported for local development and self-hosted deployments; see 
 
 ### For Team Members
 
-1. Create your own `config/mail.php` from the example
+1. Create your own `app/config/mail.php` from the example
 2. Generate your own Gmail App Password
 3. Use separate test email accounts for development
 4. Never push sensitive configuration files

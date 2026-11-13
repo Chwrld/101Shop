@@ -17,7 +17,7 @@
   },
   "scripts": {
     "post-install-cmd": [
-      "php -r \"file_exists('config/mail.php') || copy('config/mail.example.php', 'config/mail.php');\""
+      "php -r \"file_exists('app/config/mail.php') || copy('app/config/mail.example.php', 'app/config/mail.php');\""
     ]
   }
 }

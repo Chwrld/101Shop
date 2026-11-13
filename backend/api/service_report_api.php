@@ -116,8 +116,42 @@ function handleAddProgressComment($conn, $input = null)
     $report_id = isset($input['report_id']) ? intval($input['report_id']) : 0;
     $progress_key = isset($input['progress_key']) ? trim($input['progress_key']) : '';
     $comment_text = isset($input['comment_text']) ? trim($input['comment_text']) : '';
-    $created_by = isset($_SESSION['user_id']) ? intval($_SESSION['user_id']) : NULL;
-    $created_by_name = isset($_SESSION['name']) ? trim($_SESSION['name']) : 'Unknown User';
+    $created_by = isset($_SESSION['user_id']) ? intval($_SESSION['user_id']) : (isset($_SESSION['user']['id']) ? intval($_SESSION['user']['id']) : (isset($_SESSION['user']['user_id']) ? intval($_SESSION['user']['user_id']) : NULL));
+
+    $created_by_name = '';
+    $nameCandidates = [
+        $_SESSION['full_name'] ?? null,
+        $_SESSION['name'] ?? null,
+        $_SESSION['username'] ?? null,
+        $_SESSION['user']['full_name'] ?? null,
+        $_SESSION['user']['name'] ?? null,
+        $_SESSION['user']['username'] ?? null,
+    ];
+    foreach ($nameCandidates as $candidate) {
+        if (is_string($candidate) && trim($candidate) !== '') {
+            $created_by_name = trim($candidate);
+            break;
+        }
+    }
+    if ($created_by_name === '' && $created_by) {
+        // Fallback: resolve account name from staffs table
+        $stmtUser = $conn->prepare("SELECT COALESCE(NULLIF(full_name,''), username) AS display_name FROM staffs WHERE staff_id = ? LIMIT 1");
+        if ($stmtUser) {
+            $stmtUser->bind_param('i', $created_by);
+            if ($stmtUser->execute()) {
+                $resUser = $stmtUser->get_result();
+                if ($resUser && ($rowUser = $resUser->fetch_assoc())) {
+                    if (!empty($rowUser['display_name'])) {
+                        $created_by_name = trim($rowUser['display_name']);
+                    }
+                }
+            }
+            $stmtUser->close();
+        }
+    }
+    if ($created_by_name === '') {
+        $created_by_name = 'Unknown User';
+    }
 
     // Validation
     if (!$report_id || !$progress_key || !$comment_text) {

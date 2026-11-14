@@ -11,3 +11,5 @@ vendor/phpmailer/.git
 Thumbs.db
 *.log
 *.sql
+app/config/mail.local.php
+app/config/database.local.php

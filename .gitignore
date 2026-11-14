@@ -13,9 +13,14 @@ docs/
 
 # Environment and Configuration
 /app/config/mail.php
+/app/config/mail.local.php
+/app/config/database.local.php
 *.env
 .env.*
 !.env.example
+
+# InfinityFree build output (Method B)
+/dist-infinityfree/
 
 # Logs and Cache
 *.log

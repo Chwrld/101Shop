@@ -1,13 +1,42 @@
 <?php
 
-require __DIR__ . '/../../../app/handlers/Database.php';
+// Buffer output so a PHP warning can never corrupt the JSON body.
+// (Session is started by apiGuard.php -> public/bootstrap.php -> app/bootstrap.php,
+//  which also applies the hardened cookie flags.)
+if (ob_get_level() === 0) {
+    ob_start();
+}
 
+require __DIR__ . '/../../../app/handlers/Database.php';
 require __DIR__ . '/apiGuard.php';
 header("Content-Type: application/json");
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(204);
+    exit;
+}
 
 // Prevent PHP notices/warnings from being sent to the client as HTML
 ini_set('display_errors', '0');
 error_reporting(E_ALL);
+
+register_shutdown_function(function () {
+    $err = error_get_last();
+    if ($err && in_array($err['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR], true)) {
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+        if (!headers_sent()) {
+            http_response_code(500);
+            header('Content-Type: application/json');
+        }
+        echo json_encode([
+            'success' => false,
+            'data' => null,
+            'message' => 'Server error: ' . $err['message']
+        ]);
+    }
+});
 
 function sendResponse($success, $data = null, $message = '', $httpCode = 200)
 {
@@ -30,24 +59,28 @@ try {
     $conn = $db->getConnection();
 
     // Check if connection is successful
-    if (!$conn || $conn->connect_error) {
+    if (!$conn) {
         sendResponse(false, null, 'Database connection failed', 500);
     }
 
     $action = isset($_GET['action']) ? $_GET['action'] : (isset($_POST['action']) ? $_POST['action'] : '');
-    
+
+    // Read JSON body once (php://input can only be consumed once)
+    $rawInput = file_get_contents('php://input');
+    $jsonInput = json_decode($rawInput, true);
+    if (!is_array($jsonInput)) {
+        $jsonInput = [];
+    }
+
     // For JSON POST requests, also check the JSON body for action
-    if (empty($action)) {
-        $input = json_decode(file_get_contents('php://input'), true);
-        if ($input && isset($input['action'])) {
-            $action = $input['action'];
-        }
+    if (empty($action) && isset($jsonInput['action'])) {
+        $action = $jsonInput['action'];
     }
 
     // Handle different actions
     switch ($action) {
         case 'addProgressComment':
-            handleAddProgressComment($conn);
+            handleAddProgressComment($conn, $jsonInput);
             break;
         case 'getProgressComments':
             handleGetProgressComments($conn);
@@ -66,11 +99,14 @@ try {
 
 // ============ HANDLER FUNCTIONS ============
 
-function handleAddProgressComment($conn)
+function handleAddProgressComment($conn, $input = null)
 {
-    // Get POST data
-    $input = json_decode(file_get_contents('php://input'), true);
-    
+    // Get POST data (passed in because php://input can only be read once)
+    if ($input === null) {
+        $decoded = json_decode(file_get_contents('php://input'), true);
+        $input = is_array($decoded) ? $decoded : null;
+    }
+
     if (!$input) {
         sendResponse(false, null, 'Invalid JSON input', 400);
     }
@@ -78,8 +114,42 @@ function handleAddProgressComment($conn)
     $report_id = isset($input['report_id']) ? intval($input['report_id']) : 0;
     $progress_key = isset($input['progress_key']) ? trim($input['progress_key']) : '';
     $comment_text = isset($input['comment_text']) ? trim($input['comment_text']) : '';
-    $created_by = isset($_SESSION['user_id']) ? intval($_SESSION['user_id']) : NULL;
-    $created_by_name = isset($_SESSION['name']) ? trim($_SESSION['name']) : 'Unknown User';
+    $created_by = isset($_SESSION['user_id']) ? intval($_SESSION['user_id']) : (isset($_SESSION['user']['id']) ? intval($_SESSION['user']['id']) : (isset($_SESSION['user']['user_id']) ? intval($_SESSION['user']['user_id']) : NULL));
+
+    $created_by_name = '';
+    $nameCandidates = [
+        $_SESSION['full_name'] ?? null,
+        $_SESSION['name'] ?? null,
+        $_SESSION['username'] ?? null,
+        $_SESSION['user']['full_name'] ?? null,
+        $_SESSION['user']['name'] ?? null,
+        $_SESSION['user']['username'] ?? null,
+    ];
+    foreach ($nameCandidates as $candidate) {
+        if (is_string($candidate) && trim($candidate) !== '') {
+            $created_by_name = trim($candidate);
+            break;
+        }
+    }
+    if ($created_by_name === '' && $created_by) {
+        // Fallback: resolve account name from staffs table
+        $stmtUser = $conn->prepare("SELECT COALESCE(NULLIF(full_name,''), username) AS display_name FROM staffs WHERE staff_id = ? LIMIT 1");
+        if ($stmtUser) {
+            $stmtUser->bind_param('i', $created_by);
+            if ($stmtUser->execute()) {
+                $resUser = $stmtUser->get_result();
+                if ($resUser && ($rowUser = $resUser->fetch_assoc())) {
+                    if (!empty($rowUser['display_name'])) {
+                        $created_by_name = trim($rowUser['display_name']);
+                    }
+                }
+            }
+            $stmtUser->close();
+        }
+    }
+    if ($created_by_name === '') {
+        $created_by_name = 'Unknown User';
+    }
 
     // Validation
     if (!$report_id || !$progress_key || !$comment_text) {
@@ -107,6 +177,24 @@ function handleAddProgressComment($conn)
         sendResponse(false, null, 'Failed to create comments table: ' . $conn->error, 500);
     }
 
+    // Ensure required columns exist for older schemas
+    $requiredColumns = [
+        'comment_text' => "ALTER TABLE service_progress_comments ADD COLUMN comment_text LONGTEXT NULL",
+        'created_by' => "ALTER TABLE service_progress_comments ADD COLUMN created_by INT NULL",
+        'created_by_name' => "ALTER TABLE service_progress_comments ADD COLUMN created_by_name VARCHAR(255) NULL",
+        'created_at' => "ALTER TABLE service_progress_comments ADD COLUMN created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP",
+        'updated_at' => "ALTER TABLE service_progress_comments ADD COLUMN updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+    ];
+    foreach ($requiredColumns as $column => $alterSql) {
+        $colRes = $conn->query("SHOW COLUMNS FROM service_progress_comments LIKE '" . $conn->real_escape_string($column) . "'");
+        if ($colRes && $colRes->num_rows === 0) {
+            @$conn->query($alterSql); // best-effort for legacy schema drift
+        }
+        if ($colRes) {
+            $colRes->free();
+        }
+    }
+
     // Insert comment
     $insertQuery = "
         INSERT INTO service_progress_comments 
@@ -121,8 +209,11 @@ function handleAddProgressComment($conn)
 
     // Bind parameters: i=int, s=string, s=string, i=int, s=string
     // Order: report_id(i), progress_key(s), comment_text(s), created_by(i), created_by_name(s)
+    if ($created_by === null) {
+        $created_by = null; // keep null for binding
+    }
     $stmt->bind_param('issis', $report_id, $progress_key, $comment_text, $created_by, $created_by_name);
-    
+
     if (!$stmt->execute()) {
         sendResponse(false, null, 'Failed to add comment: ' . $stmt->error, 500);
     }

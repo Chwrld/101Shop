@@ -17,6 +17,15 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 OUT=dist-infinityfree
+
+# 0. vendor/ is gitignored, so a fresh clone has none. Fail with the fix
+#    instead of a cryptic `cp: cannot stat 'vendor'` later.
+if [ ! -f vendor/autoload.php ]; then
+    echo "build-infinityfree: vendor/autoload.php is missing." >&2
+    echo "  Run: composer install --no-dev --optimize-autoloader" >&2
+    exit 1
+fi
+
 rm -rf "$OUT"
 mkdir -p "$OUT"
 

@@ -21,6 +21,8 @@ docs/
 
 # InfinityFree build output (Method B)
 /dist-infinityfree/
+docker/Dockerfile.flat
+docker-compose.flat.yml
 
 # Logs and Cache
 *.log
@@ -36,3 +38,6 @@ docs/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# ftp tool
+.ft/

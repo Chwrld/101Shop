@@ -34,7 +34,13 @@ This will:
    ```bash
    mysql -u root repairsystem < database/migrations/add_reset_token_fields.sql
    ```
-4. Configure database connection in `app/config/database.php`:
+4. Only for databases created before the progress-comments feature — apply the
+   progress-comments migration (it also adds any columns missing from an older
+   `service_progress_comments` table, and is safe to re-run):
+   ```bash
+   mysql -u root repairsystem < database/migrations/add_service_progress_comments.sql
+   ```
+5. Configure database connection in `app/config/database.php`:
    ```php
    return [
        'host' => 'localhost',
